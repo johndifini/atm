@@ -32,6 +32,13 @@ The user can:
 - Duplicate form submissions must not be silently interpreted as two intentional transactions; the implementation must choose and document an idempotency or Post/Redirect/Get strategy.
 - User-facing errors must be actionable and must not expose stack traces or database details.
 
+### Resolved by the domain implementation
+
+- Withdrawing or transferring an account's entire balance is allowed; the balance becomes exactly zero.
+- Trailing fractional zeros are accepted (`1.100` is the same amount as `1.10`); a third significant fractional digit is rejected.
+- Account identifiers are the stable, case-insensitive slugs `checking` and `savings`; display names are separate.
+- A transfer produces exactly one history record carrying both accounts and both post-transaction balances. Deposits record only the destination account and withdrawals only the source account, each with that account's post-transaction balance.
+
 ## Quality requirements
 
 - Domain rules are independent of ASP.NET Core and Entity Framework Core.

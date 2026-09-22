@@ -37,4 +37,4 @@ The SQLite database will be a local runtime artifact and is ignored by Git. The 
 
 ## Status
 
-Architecture scaffold only. No ATM feature should be inferred to exist until its acceptance tests and implementation are committed together.
+Phase 1 of [`PLAN.md`](PLAN.md) is complete: the framework-free domain model (`Money`, `Account`, `Transaction`, domain errors) and its unit tests. Application use cases, persistence, and the web UI are not yet implemented; no ATM feature should be inferred to exist until its acceptance tests and implementation are committed together.

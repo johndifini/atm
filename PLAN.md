@@ -32,6 +32,11 @@ flowchart LR
 
 The implementation must define the exact history schema before its first migration. Transfers must be auditable without reconstructing facts from mutable account rows.
 
+The domain (phase 1) fixes that schema as follows:
+
+- `Account`: `AccountId` slug (`checking` / `savings`), trimmed display name, `Money` balance, and an integer `Version` incremented on every successful mutation, to be mapped as the EF Core concurrency token.
+- `Transaction`: version-7 `Guid` identifier, UTC `DateTime`, `TransactionType` (`Deposit` / `Withdrawal` / `Transfer`), `Money` amount, and two optional sides — `SourceAccountId` + `SourceBalanceAfter`, `DestinationAccountId` + `DestinationBalanceAfter`. Deposits fill only the destination side, withdrawals only the source side, transfers both with distinct accounts. Each account mutation returns the `Transaction` that records it so the application layer persists both in one unit of work.
+
 ## Transaction boundaries
 
 - Deposit: balance update plus history append in one database transaction.
