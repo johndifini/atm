@@ -37,6 +37,8 @@ The user can:
 - Withdrawing or transferring an account's entire balance is allowed; the balance becomes exactly zero.
 - Trailing fractional zeros are accepted (`1.100` is the same amount as `1.10`); a third significant fractional digit is rejected.
 - Account identifiers are the stable, case-insensitive slugs `checking` and `savings`; display names are separate.
+- An operation naming an account that does not exist is rejected without any state change.
+- A concurrency conflict at commit time writes nothing and surfaces as a retryable error; the user is asked to review balances and try again.
 - A transfer produces exactly one history record carrying both accounts and both post-transaction balances. Deposits record only the destination account and withdrawals only the source account, each with that account's post-transaction balance.
 
 ## Quality requirements
