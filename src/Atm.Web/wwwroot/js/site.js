@@ -14,6 +14,11 @@
     });
     window.history.replaceState(null, "", tab.getAttribute("href"));
   }
+  // Roving tabindex is applied only here: without this script every tab stays
+  // a plain, focusable link.
+  tabs.forEach(function (t) {
+    t.setAttribute("tabindex", t.getAttribute("aria-selected") === "true" ? "0" : "-1");
+  });
   tabs.forEach(function (tab, index) {
     tab.addEventListener("click", function (event) {
       event.preventDefault();

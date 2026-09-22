@@ -63,6 +63,12 @@ Use cases are plain handler classes: `DepositHandler`, `WithdrawHandler`, `Trans
 - Money and timestamps are formatted only in `Presentation/Format` (US dollars; UTC, labelled). History rows show a signed amount, the account or accounts, and the post-transaction balance for each side.
 - Styling is the tokenized quiet-banking system from `design/README.md`; the Bootstrap and jQuery template assets were removed. Notices carry a text label and an ARIA role so outcome is never conveyed by colour alone.
 
+## HTTP tests and accessibility (phase 5)
+
+- `tests/Atm.IntegrationTests/Http` hosts the real application through `WebApplicationFactory` over an isolated SQLite file, with cookies kept and redirects left unfollowed so Post/Redirect/Get is asserted directly. The factory accepts a database path (to simulate a restart), an environment name, and service overrides.
+- Coverage: seeded dashboard, tab selection, each operation's redirect-then-receipt flow with refresh safety, inline overdraft/same-account/invalid-amount/unknown-account errors leaving state unchanged, antiforgery rejection, a concurrency conflict surfacing as a retryable form error, the Production error page hiding exception details, persistence across a host restart, and static-asset resolution.
+- `docs/accessibility-review.md` records the manual pass: four fixes (an `h1`, keyboard-reachable tabs without JavaScript, `aria-invalid` on failed controls, a 3:1 control border) and the token contrast table. Structural checks are automated in `AccessibilityStructureTests`.
+
 ## Transaction boundaries
 
 - Deposit: balance update plus history append in one database transaction.

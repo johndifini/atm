@@ -139,6 +139,7 @@ public sealed class DashboardTests : IDisposable
     [InlineData("-5", "Enter an amount of at least $0.01.")]
     [InlineData("", "Enter an amount.")]
     [InlineData("1.005", "Amount cannot have more than two fractional digits.")]
+    [InlineData("abc", "The value 'abc' is not valid for Amount.")]
     public async Task InvalidAmountsAreReportedInline(string amount, string expectedMessage)
     {
         var response = await _client.PostAsync("Deposit", new()

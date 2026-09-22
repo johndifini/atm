@@ -7,6 +7,8 @@
     ViewData["Title"] = "Dashboard";
 }
 
+<h1 class="visually-hidden">Accounts dashboard</h1>
+
 @if (Model.SuccessMessage is not null)
 {
     <div class="notice notice-success" role="status">
@@ -31,18 +33,18 @@
         @foreach (var operation in OperationCatalog.All)
         {
             var selected = operation == Model.ActiveOperation;
-            <a role="tab" id="tab-@operation.Slug()" class="tab" href="/?op=@operation.Slug()" aria-selected="@(selected ? "true" : "false")" aria-controls="panel-@operation.Slug()" tabindex="@(selected ? "0" : "-1")">@operation.Label()</a>
+            <a role="tab" id="tab-@operation.Slug()" class="tab" href="/?op=@operation.Slug()" aria-selected="@(selected ? "true" : "false")" aria-controls="panel-@operation.Slug()">@operation.Label()</a>
         }
     </div>
 
     <div id="panel-deposit" role="tabpanel" aria-labelledby="tab-deposit" hidden="@(Model.ActiveOperation != Operation.Deposit)">
-        <form method="post" asp-page-handler="Deposit" class="op-form" novalidate="false">
+        <form method="post" asp-page-handler="Deposit" class="op-form">
             <div asp-validation-summary="ModelOnly" class="notice notice-error" role="alert">
                 <span class="notice-label">Error:</span>
             </div>
             <div class="field">
                 <label asp-for="Deposit.AccountId">To account</label>
-                <select asp-for="Deposit.AccountId" data-field="account" required aria-describedby="deposit-account-error">
+                <select asp-for="Deposit.AccountId" data-field="account" required aria-describedby="deposit-account-error" aria-invalid="@Model.Invalid("Deposit.AccountId")">
                     @foreach (var account in Model.Accounts)
                     {
                         <option value="@account.Id.Value">@account.Name</option>
@@ -55,7 +57,7 @@
                 <div class="amount-input">
                     <span class="amount-prefix" aria-hidden="true">$</span>
                     <input asp-for="Deposit.Amount" type="number" inputmode="decimal" step="0.01" min="0.01" required
-                           data-field="amount" placeholder="0.00" aria-describedby="deposit-amount-error" />
+                           data-field="amount" placeholder="0.00" aria-describedby="deposit-amount-error" aria-invalid="@Model.Invalid("Deposit.Amount")" />
                 </div>
                 <span asp-validation-for="Deposit.Amount" id="deposit-amount-error" class="field-error"></span>
             </div>
@@ -70,7 +72,7 @@
             </div>
             <div class="field">
                 <label asp-for="Withdraw.AccountId">From account</label>
-                <select asp-for="Withdraw.AccountId" data-field="account" required aria-describedby="withdraw-account-error">
+                <select asp-for="Withdraw.AccountId" data-field="account" required aria-describedby="withdraw-account-error" aria-invalid="@Model.Invalid("Withdraw.AccountId")">
                     @foreach (var account in Model.Accounts)
                     {
                         <option value="@account.Id.Value">@account.Name</option>
@@ -83,7 +85,7 @@
                 <div class="amount-input">
                     <span class="amount-prefix" aria-hidden="true">$</span>
                     <input asp-for="Withdraw.Amount" type="number" inputmode="decimal" step="0.01" min="0.01" required
-                           data-field="amount" placeholder="0.00" aria-describedby="withdraw-amount-error" />
+                           data-field="amount" placeholder="0.00" aria-describedby="withdraw-amount-error" aria-invalid="@Model.Invalid("Withdraw.Amount")" />
                 </div>
                 <span asp-validation-for="Withdraw.Amount" id="withdraw-amount-error" class="field-error"></span>
             </div>
@@ -99,7 +101,7 @@
             <div class="field-row">
                 <div class="field">
                     <label asp-for="Transfer.SourceAccountId">From</label>
-                    <select asp-for="Transfer.SourceAccountId" data-field="source" required aria-describedby="transfer-source-error">
+                    <select asp-for="Transfer.SourceAccountId" data-field="source" required aria-describedby="transfer-source-error" aria-invalid="@Model.Invalid("Transfer.SourceAccountId")">
                         @foreach (var account in Model.Accounts)
                         {
                             <option value="@account.Id.Value">@account.Name</option>
@@ -109,7 +111,7 @@
                 </div>
                 <div class="field">
                     <label asp-for="Transfer.DestinationAccountId">To</label>
-                    <select asp-for="Transfer.DestinationAccountId" data-field="destination" required aria-describedby="transfer-destination-error">
+                    <select asp-for="Transfer.DestinationAccountId" data-field="destination" required aria-describedby="transfer-destination-error" aria-invalid="@Model.Invalid("Transfer.DestinationAccountId")">
                         @foreach (var account in Model.Accounts)
                         {
                             <option value="@account.Id.Value">@account.Name</option>
@@ -123,7 +125,7 @@
                 <div class="amount-input">
                     <span class="amount-prefix" aria-hidden="true">$</span>
                     <input asp-for="Transfer.Amount" type="number" inputmode="decimal" step="0.01" min="0.01" required
-                           data-field="amount" placeholder="0.00" aria-describedby="transfer-amount-error" />
+                           data-field="amount" placeholder="0.00" aria-describedby="transfer-amount-error" aria-invalid="@Model.Invalid("Transfer.Amount")" />
                 </div>
                 <span asp-validation-for="Transfer.Amount" id="transfer-amount-error" class="field-error"></span>
             </div>

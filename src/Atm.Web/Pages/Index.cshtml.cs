@@ -61,6 +61,10 @@ public sealed class IndexModel : PageModel
 
     public string AccountName(AccountId id) => _names.GetValueOrDefault(id, id.Value);
 
+    /// <summary>"true" when the field has a validation error, otherwise null so Razor omits the attribute.</summary>
+    public string? Invalid(string key) =>
+        ModelState.TryGetValue(key, out var entry) && entry.Errors.Count > 0 ? "true" : null;
+
     public async Task OnGetAsync(string? op, CancellationToken cancellationToken)
     {
         ActiveOperation = OperationCatalog.Parse(op);
