@@ -20,7 +20,10 @@ internal sealed class AccountRepository : IAccountRepository
 
     public async Task<IReadOnlyList<Account>> ListAsync(CancellationToken cancellationToken)
     {
+        // Display reads bypass the identity map so that a request whose commit
+        // failed re-renders the balances actually in the database.
         return await _db.Accounts
+            .AsNoTracking()
             .OrderBy(a => a.Name)
             .ToListAsync(cancellationToken);
     }

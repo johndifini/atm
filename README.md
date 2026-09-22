@@ -43,4 +43,4 @@ dotnet ef migrations add <Name> --project src/Atm.Infrastructure --output-dir Pe
 
 ## Status
 
-Phases 1 to 3 of [`PLAN.md`](PLAN.md) are complete: the framework-free domain model, the application ports and use cases, and SQLite persistence with its first migration, startup seeding, and integration tests. The web UI is not yet implemented; no ATM feature should be inferred to exist until its acceptance tests and implementation are committed together.
+Phases 1 to 4 of [`PLAN.md`](PLAN.md) are complete: the framework-free domain model, the application ports and use cases, SQLite persistence with its first migration and startup seeding, and the Razor Pages dashboard with Post/Redirect/Get and inline error mapping, all covered by domain, application, SQLite, and HTTP tests. Remaining: the full HTTP test pass with a manual accessibility review, and the presentation deck.

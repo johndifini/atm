@@ -1,10 +1,194 @@
-﻿@page
+@page
+@using Atm.Domain.Transactions
+@using Atm.Web.Operations
+@using Atm.Web.Presentation
 @model IndexModel
 @{
-    ViewData["Title"] = "Home page";
+    ViewData["Title"] = "Dashboard";
 }
 
-<div class="text-center">
-    <h1 class="display-4">Welcome</h1>
-    <p>Learn about <a href="https://learn.microsoft.com/aspnet/core">building Web apps with ASP.NET Core</a>.</p>
-</div>
+@if (Model.SuccessMessage is not null)
+{
+    <div class="notice notice-success" role="status">
+        <span class="notice-label">Success:</span> @Model.SuccessMessage
+    </div>
+}
+
+<section class="accounts" aria-label="Accounts">
+    @foreach (var account in Model.Accounts)
+    {
+        <article class="card account-card">
+            <h2 class="account-name">@account.Name</h2>
+            <p class="account-balance"><span class="visually-hidden">Balance</span> @Format.Currency(account.Balance)</p>
+        </article>
+    }
+</section>
+
+<section class="card operations" aria-labelledby="operations-heading">
+    <h2 id="operations-heading" class="section-heading">Operations</h2>
+
+    <div class="tabs" role="tablist" aria-label="Operation">
+        @foreach (var operation in OperationCatalog.All)
+        {
+            var selected = operation == Model.ActiveOperation;
+            <a role="tab" id="tab-@operation.Slug()" class="tab" href="/?op=@operation.Slug()" aria-selected="@(selected ? "true" : "false")" aria-controls="panel-@operation.Slug()" tabindex="@(selected ? "0" : "-1")">@operation.Label()</a>
+        }
+    </div>
+
+    <div id="panel-deposit" role="tabpanel" aria-labelledby="tab-deposit" hidden="@(Model.ActiveOperation != Operation.Deposit)">
+        <form method="post" asp-page-handler="Deposit" class="op-form" novalidate="false">
+            <div asp-validation-summary="ModelOnly" class="notice notice-error" role="alert">
+                <span class="notice-label">Error:</span>
+            </div>
+            <div class="field">
+                <label asp-for="Deposit.AccountId">To account</label>
+                <select asp-for="Deposit.AccountId" data-field="account" required aria-describedby="deposit-account-error">
+                    @foreach (var account in Model.Accounts)
+                    {
+                        <option value="@account.Id.Value">@account.Name</option>
+                    }
+                </select>
+                <span asp-validation-for="Deposit.AccountId" id="deposit-account-error" class="field-error"></span>
+            </div>
+            <div class="field">
+                <label asp-for="Deposit.Amount">Amount</label>
+                <div class="amount-input">
+                    <span class="amount-prefix" aria-hidden="true">$</span>
+                    <input asp-for="Deposit.Amount" type="number" inputmode="decimal" step="0.01" min="0.01" required
+                           data-field="amount" placeholder="0.00" aria-describedby="deposit-amount-error" />
+                </div>
+                <span asp-validation-for="Deposit.Amount" id="deposit-amount-error" class="field-error"></span>
+            </div>
+            <button type="submit" class="button">Deposit</button>
+        </form>
+    </div>
+
+    <div id="panel-withdraw" role="tabpanel" aria-labelledby="tab-withdraw" hidden="@(Model.ActiveOperation != Operation.Withdraw)">
+        <form method="post" asp-page-handler="Withdraw" class="op-form" data-confirm="Withdraw {amount} from {account}?">
+            <div asp-validation-summary="ModelOnly" class="notice notice-error" role="alert">
+                <span class="notice-label">Error:</span>
+            </div>
+            <div class="field">
+                <label asp-for="Withdraw.AccountId">From account</label>
+                <select asp-for="Withdraw.AccountId" data-field="account" required aria-describedby="withdraw-account-error">
+                    @foreach (var account in Model.Accounts)
+                    {
+                        <option value="@account.Id.Value">@account.Name</option>
+                    }
+                </select>
+                <span asp-validation-for="Withdraw.AccountId" id="withdraw-account-error" class="field-error"></span>
+            </div>
+            <div class="field">
+                <label asp-for="Withdraw.Amount">Amount</label>
+                <div class="amount-input">
+                    <span class="amount-prefix" aria-hidden="true">$</span>
+                    <input asp-for="Withdraw.Amount" type="number" inputmode="decimal" step="0.01" min="0.01" required
+                           data-field="amount" placeholder="0.00" aria-describedby="withdraw-amount-error" />
+                </div>
+                <span asp-validation-for="Withdraw.Amount" id="withdraw-amount-error" class="field-error"></span>
+            </div>
+            <button type="submit" class="button">Withdraw</button>
+        </form>
+    </div>
+
+    <div id="panel-transfer" role="tabpanel" aria-labelledby="tab-transfer" hidden="@(Model.ActiveOperation != Operation.Transfer)">
+        <form method="post" asp-page-handler="Transfer" class="op-form" data-confirm="Transfer {amount} from {source} to {destination}?">
+            <div asp-validation-summary="ModelOnly" class="notice notice-error" role="alert">
+                <span class="notice-label">Error:</span>
+            </div>
+            <div class="field-row">
+                <div class="field">
+                    <label asp-for="Transfer.SourceAccountId">From</label>
+                    <select asp-for="Transfer.SourceAccountId" data-field="source" required aria-describedby="transfer-source-error">
+                        @foreach (var account in Model.Accounts)
+                        {
+                            <option value="@account.Id.Value">@account.Name</option>
+                        }
+                    </select>
+                    <span asp-validation-for="Transfer.SourceAccountId" id="transfer-source-error" class="field-error"></span>
+                </div>
+                <div class="field">
+                    <label asp-for="Transfer.DestinationAccountId">To</label>
+                    <select asp-for="Transfer.DestinationAccountId" data-field="destination" required aria-describedby="transfer-destination-error">
+                        @foreach (var account in Model.Accounts)
+                        {
+                            <option value="@account.Id.Value">@account.Name</option>
+                        }
+                    </select>
+                    <span asp-validation-for="Transfer.DestinationAccountId" id="transfer-destination-error" class="field-error"></span>
+                </div>
+            </div>
+            <div class="field">
+                <label asp-for="Transfer.Amount">Amount</label>
+                <div class="amount-input">
+                    <span class="amount-prefix" aria-hidden="true">$</span>
+                    <input asp-for="Transfer.Amount" type="number" inputmode="decimal" step="0.01" min="0.01" required
+                           data-field="amount" placeholder="0.00" aria-describedby="transfer-amount-error" />
+                </div>
+                <span asp-validation-for="Transfer.Amount" id="transfer-amount-error" class="field-error"></span>
+            </div>
+            <button type="submit" class="button">Transfer</button>
+        </form>
+    </div>
+</section>
+
+<section class="card history" aria-labelledby="history-heading">
+    <h2 id="history-heading" class="section-heading">Transaction history</h2>
+    @if (Model.History.Count == 0)
+    {
+        <p class="muted">No transactions yet.</p>
+    }
+    else
+    {
+        <table class="history-table">
+            <caption class="visually-hidden">Transactions, newest first</caption>
+            <thead>
+                <tr>
+                    <th scope="col">Time</th>
+                    <th scope="col">Type</th>
+                    <th scope="col" class="numeric">Amount</th>
+                    <th scope="col">Accounts</th>
+                    <th scope="col">Resulting balance</th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var item in Model.History)
+                {
+                    <tr>
+                        <td data-label="Time"><time datetime="@Format.MachineTimestamp(item.OccurredAtUtc)">@Format.Timestamp(item.OccurredAtUtc)</time></td>
+                        <td data-label="Type">@Format.TypeLabel(item.Type)</td>
+                        <td data-label="Amount" class="numeric">@Format.SignedAmount(item.Type, item.Amount)</td>
+                        <td data-label="Accounts">
+                            @if (item.Type == TransactionType.Transfer)
+                            {
+                                <text>@Model.AccountName(item.SourceAccountId!.Value) &rarr; @Model.AccountName(item.DestinationAccountId!.Value)</text>
+                            }
+                            else if (item.SourceAccountId is { } source)
+                            {
+                                @Model.AccountName(source)
+                            }
+                            else
+                            {
+                                @Model.AccountName(item.DestinationAccountId!.Value)
+                            }
+                        </td>
+                        <td data-label="Resulting balance">
+                            @if (item.Type == TransactionType.Transfer)
+                            {
+                                <text>@Model.AccountName(item.SourceAccountId!.Value) @Format.Currency(item.SourceBalanceAfter!.Value) &middot; @Model.AccountName(item.DestinationAccountId!.Value) @Format.Currency(item.DestinationBalanceAfter!.Value)</text>
+                            }
+                            else if (item.SourceBalanceAfter is { } sourceBalance)
+                            {
+                                @Format.Currency(sourceBalance)
+                            }
+                            else
+                            {
+                                @Format.Currency(item.DestinationBalanceAfter!.Value)
+                            }
+                        </td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    }
+</section>

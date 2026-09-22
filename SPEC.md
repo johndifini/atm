@@ -40,7 +40,9 @@ The user can:
 - An operation naming an account that does not exist is rejected without any state change.
 - "First database creation" is implemented as "the accounts table is empty": startup applies migrations and seeds only when no accounts exist, so restarts never reset balances.
 - A concurrency conflict at commit time writes nothing and surfaces as a retryable error; the user is asked to review balances and try again.
-- A transfer produces exactly one history record carrying both accounts and both post-transaction balances. Deposits record only the destination account and withdrawals only the source account, each with that account's post-transaction balance.
+- A transfer produces exactly one history record carrying both accounts and both post-transaction balances.
+- Duplicate submissions are handled with Post/Redirect/Get: a successful POST redirects to the dashboard and shows a one-time confirmation, so a browser refresh re-issues a GET rather than the operation. The submit button is also disabled while a request is in flight, and withdrawals and transfers ask for confirmation first. Idempotency keys are a documented roadmap item, not implemented.
+- Presentation validation (required fields, a minimum of $0.01) gives inline feedback; the domain remains the authority for every financial rule, and its rejections are mapped to the same inline fields. Deposits record only the destination account and withdrawals only the source account, each with that account's post-transaction balance.
 
 ## Quality requirements
 

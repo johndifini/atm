@@ -55,6 +55,14 @@ Use cases are plain handler classes: `DepositHandler`, `WithdrawHandler`, `Trans
 - `AtmDatabaseInitializer` runs at host startup: apply pending migrations, then seed Checking and Savings at $1,000.00 only if the `Accounts` table is empty. Seeding is deliberately not done through migration `HasData`, which would treat mutable balances as desired schema state.
 - Schema changes go through `dotnet ef migrations add <Name> --project src/Atm.Infrastructure --output-dir Persistence/Migrations`; the design-time factory removes the need for a startup project. An integration test fails if the model has changes without a migration.
 
+## Presentation (phase 4)
+
+- One Razor Page, `Pages/Index`, is the whole UI: two account cards, an operation tablist (`?op=deposit|withdraw|transfer`) that shows one form at a time, and the history table. It works without JavaScript; `site.js` only switches tabs in place, confirms withdrawals and transfers, and disables the submit button while processing.
+- Each form posts to its own named handler with its own input model (`DepositInput`, `WithdrawInput`, `TransferInput`) bound by prefix, so a failed submission re-renders with only that form's values and errors.
+- Success follows Post/Redirect/Get: the receipt sentence goes into TempData and the redirect returns to the same tab. Failure maps exceptions to fields: `InvalidAmountException` and `InsufficientFundsException` to the amount, `SameAccountTransferException` to the destination, `AccountNotFoundException` to the account that was not found, and `ConcurrencyConflictException` to the form-level summary with its retry message. Unexpected exceptions reach the generic error page, which shows only a request id.
+- Money and timestamps are formatted only in `Presentation/Format` (US dollars; UTC, labelled). History rows show a signed amount, the account or accounts, and the post-transaction balance for each side.
+- Styling is the tokenized quiet-banking system from `design/README.md`; the Bootstrap and jQuery template assets were removed. Notices carry a text label and an ARIA role so outcome is never conveyed by colour alone.
+
 ## Transaction boundaries
 
 - Deposit: balance update plus history append in one database transaction.
