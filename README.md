@@ -43,4 +43,4 @@ dotnet ef migrations add <Name> --project src/Atm.Infrastructure --output-dir Pe
 
 ## Status
 
-Phases 1 to 5 of [`PLAN.md`](PLAN.md) are complete: the framework-free domain model, the application ports and use cases, SQLite persistence with its first migration and startup seeding, the Razor Pages dashboard with Post/Redirect/Get and inline error mapping, HTTP tests over the real host, and the accessibility review in [`docs/accessibility-review.md`](docs/accessibility-review.md). Remaining: screenshots and the presentation deck (phase 6).
+All six phases of [`PLAN.md`](PLAN.md) are complete: the framework-free domain model, the application ports and use cases, SQLite persistence with its first migration and startup seeding, the Razor Pages dashboard with Post/Redirect/Get and inline error mapping, HTTP tests over the real host, the accessibility review in [`docs/accessibility-review.md`](docs/accessibility-review.md), and the presentation deck with real screenshots under [`design/`](design/README.md).

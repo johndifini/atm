@@ -13,3 +13,6 @@ coverage/
 .DS_Store
 .env
 .claude/commands
+
+# Node tooling for the presentation deck (design/deck)
+node_modules/

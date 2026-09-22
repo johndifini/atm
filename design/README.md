@@ -28,6 +28,18 @@ Suggested tokens:
 
 Meet WCAG AA contrast and never communicate success or failure through color alone. Validate inline, preserve values after recoverable errors, disable submission while processing, and show clear success confirmation. Confirm withdrawals and transfers, but not deposits.
 
+## Deliverables in this directory
+
+- `atm-deck.pptx` — the seven-slide deck below, generated from real screenshots with the application's tokens (navy headings, one green accent, white cards on the pale-gray canvas). It is a build output: change `deck/build.js` and regenerate rather than editing the file by hand.
+- `deck/build.js` — the generator, with `deck/package.json` pinning its only tooling dependency. `pptxgenjs` is not part of `Atm.sln` and adds nothing to the application at runtime.
+
+```bash
+cd design/deck && npm install && node build.js
+```
+
+Pass an output path (`node build.js /tmp/preview.pptx`) to preview a change without overwriting the committed deck.
+- `screenshots/` — captures of the finished application taken with headless Chrome against a scratch database: `dashboard.png` (populated history), `receipt.png` (one-time success confirmation after Post/Redirect/Get), `overdraft.png` (inline insufficient-funds error with the typed value preserved), and `phone.png` (380px reflow with stacked cards and records).
+
 ## Seven-slide deck
 
 1. **ATM Coding Exercise** — objective, scope, final stack, and finished dashboard screenshot.

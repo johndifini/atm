@@ -1,0 +1,12 @@
+{
+  "name": "atm-deck",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Generates design/atm-deck.pptx from the screenshots in design/screenshots.",
+  "scripts": {
+    "build": "node build.js"
+  },
+  "dependencies": {
+    "pptxgenjs": "^4.0.1"
+  }
+}
