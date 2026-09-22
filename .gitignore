@@ -1,0 +1,15 @@
+bin/
+obj/
+.vs/
+.vscode/
+.idea/
+TestResults/
+coverage/
+*.user
+*.suo
+*.db
+*.db-shm
+*.db-wal
+.DS_Store
+.env
+.claude/commands
