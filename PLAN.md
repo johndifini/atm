@@ -46,6 +46,15 @@ The domain (phase 1) fixes that schema as follows:
 
 Use cases are plain handler classes: `DepositHandler`, `WithdrawHandler`, `TransferHandler` (each returns a `TransactionSummary` receipt), plus `GetAccountsQuery` and `GetTransactionHistoryQuery`. Commands carry the raw `decimal` amount; the handler converts it with `Money.From` so amount validation has one path. Domain and application exceptions propagate to the presentation layer, which maps them to user-facing messages.
 
+## Persistence (phase 3)
+
+- `AtmDbContext` maps `Account` and `Transaction` directly through value converters: `Money` ↔ `decimal` (precision 18, scale 2), `AccountId` ↔ `string`, and `DateTime` read back with `DateTimeKind.Utc`. `TransactionType` is stored as its name.
+- `Account.Version` is the EF Core concurrency token. A stale write updates zero rows, EF raises `DbUpdateConcurrencyException`, and `UnitOfWork` rethrows it as `ConcurrencyConflictException` with nothing written.
+- `UnitOfWork.CommitAsync` is one `SaveChangesAsync` call; EF Core wraps it in a single SQLite transaction, which is the atomic boundary for every operation, including a transfer's two account updates and its history row.
+- Both transaction sides are enforced foreign keys to `Accounts`; a descending index on `(OccurredAtUtc, Id)` serves the newest-first history query, with the version-7 `Guid` breaking timestamp ties.
+- `AtmDatabaseInitializer` runs at host startup: apply pending migrations, then seed Checking and Savings at $1,000.00 only if the `Accounts` table is empty. Seeding is deliberately not done through migration `HasData`, which would treat mutable balances as desired schema state.
+- Schema changes go through `dotnet ef migrations add <Name> --project src/Atm.Infrastructure --output-dir Persistence/Migrations`; the design-time factory removes the need for a startup project. An integration test fails if the model has changes without a migration.
+
 ## Transaction boundaries
 
 - Deposit: balance update plus history append in one database transaction.

@@ -1,15 +1,28 @@
+using Atm.Application.Accounts;
+using Atm.Application.Ports;
+using Atm.Application.Transactions;
+using Atm.Infrastructure;
+
 var builder = WebApplication.CreateBuilder(args);
 
-// Add services to the container.
 builder.Services.AddRazorPages();
+
+builder.Services.AddAtmPersistence(
+    builder.Configuration.GetConnectionString("Atm") ?? "Data Source=atm.db");
+builder.Services.AddSingleton<IClock, SystemClock>();
+builder.Services.AddScoped<DepositHandler>();
+builder.Services.AddScoped<WithdrawHandler>();
+builder.Services.AddScoped<TransferHandler>();
+builder.Services.AddScoped<GetAccountsQuery>();
+builder.Services.AddScoped<GetTransactionHistoryQuery>();
 
 var app = builder.Build();
 
-// Configure the HTTP request pipeline.
+await app.Services.InitializeAtmDatabaseAsync();
+
 if (!app.Environment.IsDevelopment())
 {
     app.UseExceptionHandler("/Error");
-    // The default HSTS value is 30 days. You may want to change this for production scenarios, see https://aka.ms/aspnetcore-hsts.
     app.UseHsts();
 }
 
@@ -23,6 +36,6 @@ app.MapStaticAssets();
 app.MapRazorPages()
    .WithStaticAssets();
 
-app.Run();
+await app.RunAsync();
 
 public partial class Program;

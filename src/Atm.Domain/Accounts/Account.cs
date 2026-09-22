@@ -20,6 +20,15 @@ public sealed class Account
         Balance = openingBalance;
     }
 
+    /// <summary>Rehydration constructor for persistence; parameters match property names.</summary>
+    private Account(AccountId id, string name, Money balance, int version)
+    {
+        Id = id;
+        Name = name;
+        Balance = balance;
+        Version = version;
+    }
+
     public AccountId Id { get; }
 
     public string Name { get; }
