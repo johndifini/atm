@@ -31,7 +31,7 @@ Meet WCAG AA contrast and never communicate success or failure through color alo
 ## Deliverables in this directory
 
 - `atm-deck.pptx` — the seven-slide deck below, generated from real screenshots using the approved Jony Vibe presentation system: a `#121212` canvas, `#F5F5F5` type, and restrained `#00F604`, `#F67F00`, or `#0077F6` emphasis. Each slide has one dominant accent and targets no more than 36 authored words; detail belongs in speaker notes. It is a build output: change `deck/build.js` and regenerate rather than editing the file by hand.
-- `deck/build.js` — the generator, with `deck/package.json` pinning its only tooling dependency. `pptxgenjs` is not part of `Atm.sln` and adds nothing to the application at runtime.
+- `deck/build.js` — the generator, with `deck/package.json` pinning its only tooling dependency. `pptxgenjs` is not part of `Atm.sln` and adds nothing to the application at runtime. The package override keeps its transitive `image-size` dependency above the vulnerable `<= 2.0.2` range reported in [GHSA-w3rx-r6r6-pgpr](https://github.com/advisories/GHSA-w3rx-r6r6-pgpr) and [GHSA-5p2g-fcmc-qvqq](https://github.com/advisories/GHSA-5p2g-fcmc-qvqq).
 
 ```bash
 cd design/deck && npm install && node build.js
