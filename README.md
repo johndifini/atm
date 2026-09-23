@@ -18,10 +18,11 @@ This repository currently contains the approved **architecture scaffold**. Featu
 
 ## Setup
 
+Run these commands from the repository root. They work in PowerShell and Command Prompt on Windows, as well as in macOS and Linux shells:
+
 ```bash
 dotnet restore Atm.sln
 dotnet build Atm.sln --no-restore
-dotnet test Atm.sln --no-build
 dotnet run --project src/Atm.Web
 ```
 
@@ -30,8 +31,20 @@ The SQLite database is created as `src/Atm.Web/atm.db` on first start (configura
 Schema changes use the repo-local `dotnet-ef` tool (`dotnet tool restore` installs it):
 
 ```bash
-dotnet ef migrations add <Name> --project src/Atm.Infrastructure --output-dir Persistence/Migrations
+dotnet ef migrations add YourMigrationName --project src/Atm.Infrastructure --output-dir Persistence/Migrations
 ```
+
+Replace `YourMigrationName` with a name for the new migration. This command also works in PowerShell and Command Prompt.
+
+## Verify
+
+After building the solution, run all test projects with:
+
+```bash
+dotnet test Atm.sln --no-build
+```
+
+`--no-build` uses the binaries produced by the preceding build command. Omit it to build before testing.
 
 ## Read first
 
