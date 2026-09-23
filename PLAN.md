@@ -72,8 +72,8 @@ Use cases are plain handler classes: `DepositHandler`, `WithdrawHandler`, `Trans
 ## Screenshots and deck (phase 6)
 
 - `design/screenshots/*.png` are real captures: the host runs against a scratch SQLite file, curl performs a deposit, withdrawal and transfer through the antiforgery-protected forms, and headless Chrome captures the dashboard, the receipt state, an overdraft error, and a 380px reflow (rendered through a local 380px iframe because headless Chrome enforces a minimum window width).
-- `design/atm-deck.pptx` is a build output of `design/deck/build.js` (pptxgenjs; tooling only, outside `Atm.sln`, adding no runtime dependency). Slides follow the outline in `design/README.md` one for one: title with the real dashboard, framing, an inward-arrow architecture diagram, a decision matrix keyed to the ADRs, the five correctness rules beside the overdraft capture, test counts and macOS delivery, and tradeoffs with the more-compute roadmap. Speaker notes carry the narrative.
-- Visual QA of the `.pptx` requires PowerPoint, Keynote, or LibreOffice; none of the headless renderers were available in the authoring environment, so the deck was checked structurally (well-formed parts, resolved relationships, every shape inside the slide, an estimated text-fit pass) and **should be opened once before presenting**. The one estimate worth checking first is slide 7's title, which may need shortening to fit on one line.
+- `design/atm-deck.pptx` is a build output of `design/deck/build.js` (pptxgenjs; tooling only, outside `Atm.sln`, adding no runtime dependency). Slides follow the outline in `design/README.md` one for one. The generator enforces Jony Vibe's 36-word target while speaker notes carry the narrative and delivery commands.
+- The `.pptx` uses the approved Jony Vibe presentation palette: charcoal `#121212`, soft white `#F5F5F5`, and one green, orange, or blue accent per slide. It was rendered slide by slide with macOS Quick Look; all seven slides were inspected at presentation size for overflow, screenshot crop, density, and footer collisions.
 
 ## Transaction boundaries
 

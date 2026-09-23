@@ -30,7 +30,7 @@ Meet WCAG AA contrast and never communicate success or failure through color alo
 
 ## Deliverables in this directory
 
-- `atm-deck.pptx` — the seven-slide deck below, generated from real screenshots with the application's tokens (navy headings, one green accent, white cards on the pale-gray canvas). It is a build output: change `deck/build.js` and regenerate rather than editing the file by hand.
+- `atm-deck.pptx` — the seven-slide deck below, generated from real screenshots using the approved Jony Vibe presentation system: a `#121212` canvas, `#F5F5F5` type, and restrained `#00F604`, `#F67F00`, or `#0077F6` emphasis. Each slide has one dominant accent and targets no more than 36 authored words; detail belongs in speaker notes. It is a build output: change `deck/build.js` and regenerate rather than editing the file by hand.
 - `deck/build.js` — the generator, with `deck/package.json` pinning its only tooling dependency. `pptxgenjs` is not part of `Atm.sln` and adds nothing to the application at runtime.
 
 ```bash
@@ -42,12 +42,12 @@ Pass an output path (`node build.js /tmp/preview.pptx`) to preview a change with
 
 ## Seven-slide deck
 
-1. **ATM Coding Exercise** — objective, scope, final stack, and finished dashboard screenshot.
-2. **How I Framed the Problem** — requirements, non-goals, quality attributes, and why clarity drove the solution.
-3. **Architecture at a Glance** — Razor Pages → application use cases → domain → EF Core/SQLite; show dependency direction.
-4. **Key Decisions** — compact matrix for Razor Pages, modular monolith, SQLite, decimal money, and single-user scope; link to ADRs.
-5. **Correctness and Failure Handling** — invariants, overdraft handling, validation, atomic transfers, concurrency, and history integrity.
-6. **Testing and Delivery** — domain, application, SQLite integration, and HTTP test layers; macOS setup and handoff artifacts.
-7. **Tradeoffs and More-Compute Roadmap** — deliberate omissions; then idempotency, richer auditing, authentication, accessibility automation, observability, load tests, deployment, and browser coverage.
+1. **ATM Coding Exercise** — objective, scope, final stack, and the finished dashboard as the visual anchor.
+2. **Problem Framing** — the required product, deliberate boundaries, and clarity as the quality bar.
+3. **Architecture and Dependency Direction** — Razor Pages to application use cases to domain, with EF Core/SQLite implementing application ports.
+4. **Decisions and Their Costs** — a readable ledger for Razor Pages, modular monolith, SQLite, decimal money, and single-user scope.
+5. **Financial Operations Fail Without Partial State** — invariants, atomic history, concurrency, and a real rejected-overdraft state.
+6. **143 Tests Cover Each System Boundary** — domain, application, SQLite integration, HTTP behavior, a success receipt, and macOS commands.
+7. **Tradeoffs and Roadmap** — deliberate omissions, an ordered roadmap, and the real 380 px layout.
 
-Use a white or pale-gray canvas, navy headings, one green accent, sparse diagrams, and real screenshots. Keep one thesis and roughly three supporting points per slide.
+Use a solid charcoal canvas, soft-white type, one dominant accent per slide, sparse diagrams, and each real screenshot once. Keep one focal element and no more than three supporting groups per slide. Aim for 36 authored words or fewer—title, labels, and body copy included—and move supporting detail to speaker notes before reducing type size. Use whitespace and hairlines instead of reproducing the application's card grid in the presentation.

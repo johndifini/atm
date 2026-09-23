@@ -1,235 +1,145 @@
-// Generates design/atm-deck.pptx — the seven-slide deck outlined in
-// design/README.md — from the real screenshots in design/screenshots.
-//
-//   cd design/deck && npm install && node build.js
-//
-// Pass an output path to write elsewhere (used to verify a change without
-// overwriting the committed deck):
-//
-//   node build.js /tmp/preview.pptx
-//
-// pptxgenjs is a tooling dependency of this script only. It is deliberately
-// not part of Atm.sln and adds no runtime dependency to the application.
+// Rebuilds the seven-slide ATM case-study deck from real application screenshots.
+// Approved Jony Vibe system: charcoal canvas, soft-white type, one restrained
+// accent per slide, and a 36-word target for authored on-slide copy.
 const pptxgen = require("pptxgenjs");
 const path = require("path");
+const fs = require("fs");
+const JSZip = require("jszip");
 
 const DESIGN = path.resolve(__dirname, "..");
-const SHOT = (n) => path.join(DESIGN, "screenshots", n);
-const OUT = process.argv[2]
-  ? path.resolve(process.argv[2])
-  : path.join(DESIGN, "atm-deck.pptx");
+const SHOT = (name) => path.join(DESIGN, "screenshots", name);
+const OUT = process.argv[2] ? path.resolve(process.argv[2]) : path.join(DESIGN, "atm-deck.pptx");
+const C = { page: "121212", surface: "1B1B1B", text: "F5F5F5", muted: "A9ADB3", line: "333333", green: "00F604", orange: "F67F00", blue: "0077F6" };
+const FONT = "Avenir Next";
+const pptx = new pptxgen();
+pptx.layout = "LAYOUT_16x9";
+pptx.author = "John DiFini";
+pptx.subject = "ATM coding exercise: architecture, correctness, and delivery";
+pptx.title = "ATM Coding Exercise";
+pptx.lang = "en-US";
+pptx.theme = { headFontFace: FONT, bodyFontFace: FONT, lang: "en-US" };
+let slideNumber = 0;
 
-// Tokens from design/README.md
-const NAVY = "174A7E", TEXT = "17212B", MUTED = "667085", GREEN = "18794E", ERROR = "B42318";
-const PAGE = "F6F8FA", SURFACE = "FFFFFF", BORDER = "D9E0E7";
-const FONT = "Calibri", MONO = "Courier New";
+function addText(slide, value, x, y, w, h, options = {}) {
+  slide.addText(value, { x, y, w, h, fontFace: FONT, fontSize: 17, color: C.text, margin: 0, isTextBox: true, valign: "top", ...options });
+}
+function line(slide, x, y, w, color = C.line, width = 0.75) {
+  slide.addShape(pptx.ShapeType.line, { x, y, w, h: 0, line: { color, width } });
+}
+function footer(slide) {
+  line(slide, 0.64, 5.19, 8.72);
+  addText(slide, String(slideNumber).padStart(2, "0"), 8.92, 5.24, 0.44, 0.18, { fontSize: 10, color: C.muted, align: "right" });
+}
+function base(title, accent, notes) {
+  const slide = pptx.addSlide(); slideNumber += 1; slide.background = { color: C.page };
+  slide.addShape(pptx.ShapeType.rect, { x: 0.64, y: 0.39, w: 0.10, h: 0.48, fill: { color: accent }, line: { color: accent, transparency: 100 } });
+  addText(slide, title, 0.91, 0.39, 8.45, 0.56, { fontSize: title.length > 36 ? 29 : 32, bold: true, fit: "shrink" });
+  footer(slide); if (notes) slide.addNotes(notes); return slide;
+}
+function kicker(slide, value, x, y, w, accent) {
+  addText(slide, value.toUpperCase(), x, y, w, 0.25, { fontSize: 11, bold: true, color: accent, charSpacing: 1.6, fit: "shrink" });
+}
+function imageFrame(slide, imagePath, x, y, w, h) {
+  slide.addShape(pptx.ShapeType.rect, { x, y, w, h, fill: { color: C.surface }, line: { color: C.line, width: 0.8 } });
+  slide.addImage({ path: imagePath, x: x + 0.04, y: y + 0.04, w: w - 0.08, h: h - 0.08 });
+}
+function arrow(slide, x1, y1, x2, y2, accent, dashed = false) {
+  slide.addShape(pptx.ShapeType.line, { x: Math.min(x1, x2), y: Math.min(y1, y2), w: Math.abs(x2 - x1) || 0.001, h: Math.abs(y2 - y1) || 0.001, flipH: x2 < x1, flipV: y2 < y1, line: { color: accent, width: 1.5, dashType: dashed ? "dash" : "solid", endArrowType: "triangle" } });
+}
+function wordCount(parts) { return parts.join(" ").trim().split(/\s+/).filter(Boolean).length; }
+const WORD_BUDGETS = [
+  ["ATM Coding Exercise", "Financial correctness, made inspectable.", "Two accounts, persisted locally, covered by 143 tests.", "Real application. Real transactions."],
+  ["Problem framing", "Goals", "Two persistent accounts", "Deposit, withdraw, transfer", "Explain every balance", "Boundaries", "One local user", "No speculative infrastructure", "Clarity is the quality bar."],
+  ["Architecture and dependency direction", "Browser", "Web", "Application", "Domain", "Infrastructure", "composition only", "implements ports", "Business rules depend on nothing external."],
+  ["Decisions and costs", "Decision", "Cost", "Razor Pages", "Less client interactivity", "Modular monolith", "Extra project structure", "SQLite + EF Core", "Single-writer ceiling", "decimal Money", "USD remains implicit", "Single user", "No user isolation"],
+  ["Failure leaves no partial state", "Validate before mutation", "Commit balance and history together", "Reject stale writes", "Rejected overdraft. Persisted state stays unchanged."],
+  ["143 tests. Every boundary.", "75 Domain", "33 Application", "35 Integration + HTTP", "Invariants", "Orchestration", "Persistence and HTTP", "A real receipt after redirect."],
+  ["Tradeoffs and roadmap", "Omitted", "Identity", "Banking breadth", "Distributed operations", "Next", "Idempotency, auditing, authentication", "Then", "Accessibility, observability, load tests", "Later", "Deployment, browser coverage", "Responsive at 380 px."],
+];
+WORD_BUDGETS.forEach((parts, index) => { const count = wordCount(parts); if (count > 36) throw new Error(`Slide ${index + 1} has ${count} authored words; limit is 36.`); });
 
-const pres = new pptxgen();
-pres.layout = "LAYOUT_16x9"; // 10 x 5.625 in
-pres.author = "John DiFini";
-pres.title = "ATM Coding Exercise";
-
-let slideNo = 0;
-function base(title, notes) {
-  const s = pres.addSlide();
-  s.background = { color: PAGE };
-  slideNo += 1;
-  s.addText(title, { x: 0.6, y: 0.35, w: 8.8, h: 0.6, fontFace: FONT, fontSize: 28, bold: true, color: NAVY, margin: 0, isTextBox: true });
-  s.addText(String(slideNo), { x: 9.0, y: 5.15, w: 0.5, h: 0.3, fontFace: FONT, fontSize: 9, color: MUTED, align: "right", margin: 0, isTextBox: true });
-  if (notes) s.addNotes(notes);
-  return s;
-}
-function card(s, x, y, w, h) {
-  s.addShape(pres.shapes.ROUNDED_RECTANGLE, { x, y, w, h, rectRadius: 0.08, fill: { color: SURFACE }, line: { color: BORDER, width: 0.75 } });
-}
-function heading(s, text, x, y, w, color = NAVY) {
-  s.addText(text, { x, y, w, h: 0.32, fontFace: FONT, fontSize: 14, bold: true, color, margin: 0, isTextBox: true });
-}
-function bullets(s, items, x, y, w, h, size = 12) {
-  s.addText(items.map((t, i) => ({ text: t, options: { bullet: true, breakLine: i < items.length - 1 } })),
-    { x, y, w, h, fontFace: FONT, fontSize: size, color: TEXT, valign: "top", margin: 0, paraSpaceAfter: 4, isTextBox: true });
-}
-function numberBadge(s, n, x, y) {
-  s.addShape(pres.shapes.OVAL, { x, y, w: 0.34, h: 0.34, fill: { color: NAVY }, line: { color: NAVY } });
-  s.addText(String(n), { x, y, w: 0.34, h: 0.34, fontFace: FONT, fontSize: 11, bold: true, color: SURFACE, align: "center", valign: "middle", margin: 0, isTextBox: true });
-}
-
-// ---------- 1. ATM Coding Exercise ----------
+// 1 — outcome first
 {
-  const s = pres.addSlide();
-  s.background = { color: PAGE };
-  slideNo += 1;
-  s.addText("CODING EXERCISE", { x: 0.6, y: 0.55, w: 4.2, h: 0.3, fontFace: FONT, fontSize: 11, bold: true, color: MUTED, charSpacing: 2, margin: 0, isTextBox: true });
-  s.addText("ATM", { x: 0.6, y: 0.85, w: 4.2, h: 0.9, fontFace: FONT, fontSize: 48, bold: true, color: NAVY, margin: 0, isTextBox: true });
-  s.addText("A single-user web ATM built to show clear architecture within a deliberately small scope.",
-    { x: 0.6, y: 1.75, w: 4.2, h: 0.75, fontFace: FONT, fontSize: 14, color: TEXT, margin: 0, isTextBox: true });
-  const rows = [
-    ["Objective", "Deposit, withdraw, transfer, view balances and history, with correct money handling."],
-    ["Scope", "One local user, two accounts (Checking and Savings) seeded at $1,000.00, persisted across restarts."],
-    ["Stack", ".NET 10, ASP.NET Core Razor Pages, EF Core with SQLite, xUnit. One deployable, no JavaScript framework."],
-  ];
-  rows.forEach(([k, v], i) => {
-    const y = 2.7 + i * 0.75;
-    s.addText(k, { x: 0.6, y, w: 1.0, h: 0.3, fontFace: FONT, fontSize: 12, bold: true, color: NAVY, margin: 0, isTextBox: true });
-    s.addText(v, { x: 1.6, y, w: 3.2, h: 0.7, fontFace: FONT, fontSize: 11.5, color: TEXT, valign: "top", margin: 0, isTextBox: true });
-  });
-  card(s, 5.15, 0.6, 4.35, 3.55);
-  s.addImage({ path: SHOT("dashboard.png"), x: 5.3, y: 0.75, w: 4.05, h: 3.16 });
-  s.addText("The finished dashboard: two accounts, one operation at a time, history newest first.",
-    { x: 5.15, y: 4.25, w: 4.35, h: 0.5, fontFace: FONT, fontSize: 10, italic: true, color: MUTED, margin: 0, isTextBox: true });
-  s.addText(String(slideNo), { x: 9.0, y: 5.15, w: 0.5, h: 0.3, fontFace: FONT, fontSize: 9, color: MUTED, align: "right", margin: 0, isTextBox: true });
-  s.addNotes("Frame the exercise in one breath: a web ATM, one user, two accounts, real persistence. The point is not features; it is showing how a small system is organised so that correctness is easy to see and verify. The screenshot is the real app, not a mock.");
+  const slide = pptx.addSlide(); slideNumber += 1; slide.background = { color: C.page };
+  kicker(slide, "Case study", 0.64, 0.50, 2.8, C.green);
+  addText(slide, "ATM", 0.64, 0.93, 3.10, 0.65, { fontSize: 47, bold: true, color: C.green });
+  addText(slide, "Coding Exercise", 0.64, 1.60, 3.48, 0.54, { fontSize: 27, bold: true, fit: "shrink" });
+  addText(slide, "Financial correctness,\nmade inspectable.", 0.64, 2.48, 3.20, 1.02, { fontSize: 24, bold: true, breakLine: true, fit: "shrink" });
+  addText(slide, "Two accounts, persisted locally,\ncovered by 143 tests.", 0.64, 3.82, 3.18, 0.62, { fontSize: 15, color: C.muted, breakLine: true });
+  imageFrame(slide, SHOT("dashboard.png"), 4.17, 0.50, 5.19, 4.04);
+  addText(slide, "Real application. Real transactions.", 4.17, 4.68, 5.19, 0.23, { fontSize: 11.5, color: C.green });
+  footer(slide);
+  slide.addNotes("Open with the finished product. This is the real application using a scratch SQLite database, not a mock. The intentionally narrow scope keeps the review on correctness, architectural boundaries, and evidence.");
 }
 
-// ---------- 2. How I Framed the Problem ----------
+// 2 — scope as contrast
 {
-  const s = base("How I framed the problem", "I prioritised organisation, separation of concerns and error handling over UI polish. So every choice was made to keep the interesting rules in one obvious place and to make the rest thin. Non-goals were written down first so scope could not creep.");
-  const cells = [
-    ["Requirements", ["Two seeded accounts, balances and history that survive restarts", "Deposit, withdraw, transfer with positive two-decimal amounts", "Newest-first history that explains the ledger"]],
-    ["Non-goals", ["Authentication, cards, PINs, multiple users", "Fees, interest, overdrafts, cash inventory, currencies", "SPA, public API, queues, cloud deployment"]],
-    ["Quality attributes", ["Business rules independent of ASP.NET Core and EF Core", "No partial writes: balance and history commit together", "Tests at every boundary, runnable on macOS with one SDK"]],
-    ["Why clarity drove it", ["A reader should find any rule in under a minute", "Thin adapters make the domain the only place bugs can hide", "Small, explicit scope beats speculative generality"]],
-  ];
-  cells.forEach(([h, items], i) => {
-    const x = i % 2 === 0 ? 0.6 : 5.1, y = i < 2 ? 1.2 : 3.2;
-    card(s, x, y, 4.3, 1.8);
-    heading(s, h, x + 0.25, y + 0.2, 3.8, i === 3 ? GREEN : NAVY);
-    bullets(s, items, x + 0.25, y + 0.58, 3.85, 1.15, 11.5);
-  });
+  const slide = base("Problem framing", C.orange, "The exercise is deliberately smaller than a retail bank. Two accounts and three operations are enough to expose the financial rules. Everything else is excluded until a real requirement earns the complexity.");
+  kicker(slide, "Goals", 0.64, 1.34, 3.75, C.orange); kicker(slide, "Boundaries", 5.08, 1.34, 3.75, C.orange);
+  slide.addShape(pptx.ShapeType.line, { x: 4.72, y: 1.31, w: 0, h: 2.80, line: { color: C.line, width: 1 } });
+  ["Two persistent accounts", "Deposit, withdraw, transfer", "Explain every balance"].forEach((value, i) => addText(slide, value, 0.64, 1.93 + i * 0.70, 3.82, 0.36, { fontSize: 18.5, bold: true, fit: "shrink" }));
+  ["One local user", "No speculative infrastructure"].forEach((value, i) => addText(slide, value, 5.08, 1.93 + i * 0.94, 4.04, 0.48, { fontSize: 20, bold: true, fit: "shrink" }));
+  line(slide, 0.64, 4.28, 8.72, C.orange, 2.2);
+  addText(slide, "Clarity is the quality bar.", 0.64, 4.48, 8.72, 0.37, { fontSize: 24, bold: true, color: C.orange });
 }
 
-// ---------- 3. Architecture at a Glance ----------
+// 3 — editable dependency diagram
 {
-  const s = base("Architecture at a glance", "Modular monolith, four projects, one deployable. Read the arrows: everything points inward. The web project references Infrastructure only to register adapters in the composition root; no business behaviour lives there. ADR-0002 records the decision.");
-  const box = (x, y, w, h, title, sub, opts = {}) => {
-    s.addShape(pres.shapes.ROUNDED_RECTANGLE, { x, y, w, h, rectRadius: 0.08, fill: { color: opts.fill || SURFACE }, line: { color: opts.line || NAVY, width: 1.25, dashType: opts.dash || "solid" } });
-    s.addText(title, { x, y: y + 0.1, w, h: 0.32, fontFace: FONT, fontSize: 13, bold: true, color: opts.color || NAVY, align: "center", margin: 0, isTextBox: true });
-    s.addText(sub, { x: x + 0.1, y: y + 0.42, w: w - 0.2, h: h - 0.5, fontFace: FONT, fontSize: 10, color: MUTED, align: "center", valign: "top", margin: 0, isTextBox: true });
-  };
-  const arrow = (x1, y1, x2, y2, opts = {}) => {
-    s.addShape(pres.shapes.LINE, { x: Math.min(x1, x2), y: Math.min(y1, y2), w: Math.abs(x2 - x1) || 0.001, h: Math.abs(y2 - y1) || 0.001,
-      flipH: x2 < x1, flipV: y2 < y1, line: { color: opts.color || NAVY, width: 1.5, endArrowType: "triangle", dashType: opts.dash || "solid" } });
-  };
-  const Y = 1.55, H = 1.05;
-  box(0.6, Y, 1.5, H, "Browser", "server-rendered HTML", { line: BORDER, color: MUTED });
-  box(2.55, Y, 1.9, H, "Atm.Web", "Razor Pages, input validation, error mapping, DI");
-  box(4.9, Y, 1.9, H, "Atm.Application", "use cases, ports, orchestration");
-  box(7.25, Y, 2.15, H, "Atm.Domain", "Money, Account, Transaction, invariants");
-  arrow(2.1, Y + H / 2, 2.55, Y + H / 2);
-  arrow(4.45, Y + H / 2, 4.9, Y + H / 2);
-  arrow(6.8, Y + H / 2, 7.25, Y + H / 2);
-  const Y2 = 3.35;
-  box(4.9, Y2, 1.9, H, "Atm.Infrastructure", "EF Core, SQLite, migrations, unit of work");
-  arrow(5.85, Y2, 5.85, Y + H);
-  s.addText("implements ports", { x: 5.95, y: Y + H + 0.25, w: 1.6, h: 0.25, fontFace: FONT, fontSize: 9.5, italic: true, color: MUTED, margin: 0, isTextBox: true });
-  // composition-root reference: Web -> Infrastructure (dotted, elbow)
-  s.addShape(pres.shapes.LINE, { x: 3.5, y: Y + H, w: 0.001, h: Y2 + H / 2 - (Y + H), line: { color: MUTED, width: 1, dashType: "dash" } });
-  arrow(3.5, Y2 + H / 2, 4.9, Y2 + H / 2, { color: MUTED, dash: "dash" });
-  s.addText("composition root registers adapters", { x: 2.55, y: Y2 + H / 2 + 0.08, w: 2.3, h: 0.4, fontFace: FONT, fontSize: 9.5, italic: true, color: MUTED, margin: 0, isTextBox: true });
-  s.addText([
-    { text: "Every solid arrow points inward. ", options: { bold: true, color: NAVY } },
-    { text: "Domain has no package references; Application depends only on Domain; Infrastructure implements Application's ports; Web composes them. Persistence can change without touching a use case, and every business rule is testable without a database or a web server." },
-  ], { x: 0.6, y: 4.6, w: 8.8, h: 0.75, fontFace: FONT, fontSize: 11.5, color: TEXT, valign: "top", margin: 0, isTextBox: true });
+  const slide = base("Architecture and dependency direction", C.blue, "Solid arrows show dependencies pointing inward. Infrastructure implements Application ports. Web references Infrastructure only in the composition root. ADR-0002 records this modular-monolith boundary.");
+  const nodes = [[0.64, 1.40, "Browser"], [2.34, 1.56, "Web"], [4.30, 1.78, "Application"], [6.49, 2.87, "Domain"]];
+  nodes.forEach(([x, w, title], i) => { const strong = i === 3; slide.addShape(pptx.ShapeType.rect, { x, y: 1.72, w, h: 1.10, fill: { color: strong ? C.blue : C.surface }, line: { color: strong ? C.blue : C.line, width: strong ? 1.3 : 0.8 } }); addText(slide, title, x + 0.10, 2.08, w - 0.20, 0.30, { fontSize: 16, bold: true, align: "center", color: strong ? C.text : C.muted, fit: "shrink" }); });
+  arrow(slide, 2.04, 2.27, 2.34, 2.27, C.blue); arrow(slide, 3.90, 2.27, 4.30, 2.27, C.blue); arrow(slide, 6.08, 2.27, 6.49, 2.27, C.blue);
+  slide.addShape(pptx.ShapeType.rect, { x: 4.30, y: 3.45, w: 1.78, h: 0.80, fill: { color: C.surface }, line: { color: C.line, width: 0.8 } });
+  addText(slide, "Infrastructure", 4.42, 3.70, 1.54, 0.26, { fontSize: 14, bold: true, align: "center", color: C.muted, fit: "shrink" });
+  arrow(slide, 5.19, 3.45, 5.19, 2.82, C.blue); addText(slide, "implements ports", 5.38, 3.04, 1.20, 0.20, { fontSize: 10.5, color: C.muted });
+  arrow(slide, 3.14, 2.82, 4.30, 3.84, C.muted, true); addText(slide, "composition only", 2.88, 3.42, 1.24, 0.20, { fontSize: 10.5, color: C.muted });
+  addText(slide, "Business rules depend on nothing external.", 0.64, 4.64, 8.72, 0.31, { fontSize: 20, bold: true, color: C.blue, align: "center" });
 }
 
-// ---------- 4. Key Decisions ----------
+// 4 — decision ledger
 {
-  const s = base("Key decisions", "Each row is an ADR in docs/adr. The tradeoff column is the honest cost; none of these are free. The through-line is: choose the smallest thing that makes the architecture legible.");
-  const hdr = (t) => ({ text: t, options: { bold: true, color: SURFACE, fill: { color: NAVY }, fontFace: FONT, fontSize: 11 } });
-  const cell = (t, o = {}) => ({ text: t, options: { fontFace: FONT, fontSize: 10.5, color: TEXT, valign: "top", ...o } });
-  const rows = [
-    [hdr("Decision"), hdr("Why"), hdr("Tradeoff"), hdr("ADR")],
-    [cell("Razor Pages, server-rendered", { bold: true }), cell("One language, one build, one deployable; Post/Redirect/Get and validation come built in"), cell("No rich client interactivity; a real API would need adding later"), cell("0001")],
-    [cell("Modular monolith", { bold: true }), cell("Four projects with inward dependencies show separation without distributed complexity"), cell("Extra project ceremony for a small codebase"), cell("0002")],
-    [cell("SQLite through EF Core", { bold: true }), cell("Durable, zero-setup, relational; migrations, transactions and concurrency tokens for free"), cell("Single-writer limits; decimal stored as text, so no arithmetic in SQL"), cell("0003")],
-    [cell("Decimal money, two digits", { bold: true }), cell("A Money value type rejects negatives and sub-cent precision at construction; no float anywhere"), cell("Conversions at every boundary; currency is implicitly USD"), cell("0005")],
-    [cell("Single-user scope", { bold: true }), cell("Removes auth, sessions and identity so the financial rules stay the centre of the exercise"), cell("Concurrency is handled, but there is no per-user isolation"), cell("Spec")],
-  ];
-  s.addTable(rows, { x: 0.6, y: 1.2, w: 8.8, colW: [1.9, 3.5, 2.7, 0.7], border: { type: "solid", color: BORDER, pt: 0.75 }, fill: { color: SURFACE }, rowH: [0.35, 0.62, 0.62, 0.62, 0.62, 0.62], margin: 0.07 });
+  const slide = base("Decisions and costs", C.orange, "The ADRs explain why each choice fits the exercise. This slide keeps the tradeoff visible: every simplification accepts a constraint. The common choice is the smallest architecture that keeps rules and boundaries legible.");
+  const header = (value) => ({ text: value, options: { bold: true, color: C.orange, fill: { color: C.page }, fontFace: FONT, fontSize: 12.5 } });
+  const cell = (value, options = {}) => ({ text: value, options: { fontFace: FONT, fontSize: 17, color: C.text, valign: "mid", ...options } });
+  const rows = [[header("DECISION"), header("COST")], [cell("Razor Pages", { bold: true }), cell("Less client interactivity", { color: C.muted })], [cell("Modular monolith", { bold: true }), cell("Extra project structure", { color: C.muted })], [cell("SQLite + EF Core", { bold: true }), cell("Single-writer ceiling", { color: C.muted })], [cell("decimal Money", { bold: true }), cell("USD remains implicit", { color: C.muted })], [cell("Single user", { bold: true }), cell("No user isolation", { color: C.muted })]];
+  slide.addTable(rows, { x: 0.64, y: 1.27, w: 8.72, h: 3.66, colW: [4.35, 4.37], rowH: [0.42, 0.65, 0.65, 0.65, 0.65, 0.64], border: { type: "solid", color: C.line, pt: 0.75 }, fill: { color: C.page }, margin: 0.10 });
 }
 
-// ---------- 5. Correctness and Failure Handling ----------
+// 5 — correctness in one failure state
 {
-  const s = base("Correctness and failure handling", "Walk the five rules top to bottom. The screenshot is a real overdraft attempt: the error is inline, the typed value is preserved, and the database is untouched. Concurrency: the Version column is the EF Core token; a stale write updates zero rows and the user sees a retry message, never a silent overwrite.");
-  const items = [
-    ["Invariants live in the domain", "Money is a value type: non-negative, at most two decimals. Operations need a positive amount. Balance can never go below zero."],
-    ["Rejections happen before any mutation", "Overdrafts, zero amounts, same-account transfers and unknown accounts throw first; nothing is touched and nothing is written."],
-    ["One commit, all or nothing", "Each operation returns the history record it creates. Infrastructure saves balance and record in one SQLite transaction."],
-    ["Optimistic concurrency", "Account.Version increments per mutation and is the EF Core concurrency token. Conflicts map to a safe retry message."],
-    ["History that explains the ledger", "One immutable record per operation carrying the account or accounts touched and each resulting balance; a transfer is one row, not two."],
-  ];
-  items.forEach(([h, t], i) => {
-    const y = 1.2 + i * 0.8;
-    numberBadge(s, i + 1, 0.6, y + 0.02);
-    s.addText(h, { x: 1.05, y, w: 4.0, h: 0.3, fontFace: FONT, fontSize: 12.5, bold: true, color: NAVY, margin: 0, isTextBox: true });
-    s.addText(t, { x: 1.05, y: y + 0.3, w: 4.0, h: 0.5, fontFace: FONT, fontSize: 10.5, color: TEXT, valign: "top", margin: 0, isTextBox: true });
-  });
-  // Cropped overdraft state (image is 1280x1000; render at 8in wide => 160 px/in)
-  card(s, 5.45, 1.2, 4.05, 2.35);
-  s.addImage({ path: SHOT("overdraft.png"), x: 5.6, y: 1.35, w: 8, h: 6.25, sizing: { type: "crop", x: 1.1, y: 1.48, w: 3.75, h: 2.05 } });
-  s.addText([
-    { text: "Overdraft attempt. ", options: { bold: true, color: ERROR } },
-    { text: "The message names the available balance, the typed amount stays in the field, and the account row is unchanged." },
-  ], { x: 5.45, y: 3.7, w: 4.05, h: 0.6, fontFace: FONT, fontSize: 10.5, color: TEXT, valign: "top", margin: 0, isTextBox: true });
-  card(s, 5.45, 4.35, 4.05, 0.85);
-  s.addText([
-    { text: "Duplicate submissions: ", options: { bold: true, color: NAVY } },
-    { text: "Post/Redirect/Get with a one-time receipt, submit disabled while processing, confirmation for withdrawals and transfers." },
-  ], { x: 5.65, y: 4.45, w: 3.7, h: 0.65, fontFace: FONT, fontSize: 10.5, color: TEXT, valign: "top", margin: 0, isTextBox: true });
+  const slide = base("Failure leaves no partial state", C.orange, "The screenshot is a real rejected overdraft. The typed value stays visible, the error names the available balance, and persisted state is unchanged. Account versions turn stale writes into a safe retry instead of lost data.");
+  ["Validate before mutation", "Commit balance and history together", "Reject stale writes"].forEach((value, i) => { addText(slide, String(i + 1).padStart(2, "0"), 0.64, 1.43 + i * 1.10, 0.45, 0.30, { fontSize: 13, bold: true, color: C.orange }); addText(slide, value, 1.22, 1.38 + i * 1.10, 3.00, 0.56, { fontSize: 20, bold: true, fit: "shrink" }); });
+  imageFrame(slide, SHOT("overdraft.png"), 4.63, 1.24, 4.73, 3.59);
+  addText(slide, "Rejected overdraft. Persisted state stays unchanged.", 4.63, 4.91, 4.73, 0.22, { fontSize: 11.5, bold: true, color: C.orange, align: "right", fit: "shrink" });
 }
 
-// ---------- 6. Testing and Delivery ----------
+// 6 — evidence over commands
 {
-  const s = base("Testing and delivery", "Test boundaries mirror production boundaries. Domain tests are pure. Application tests use a hand-written fake that records write order, which is how we know history is appended before commit. Integration tests run the real host over a throwaway SQLite file per test, including a genuine concurrency conflict and a forced primary-key violation to prove atomicity. Setup is four commands on macOS.");
-  const stats = [["75", "domain"], ["33", "application"], ["35", "integration"], ["143", "total, all green"]];
-  stats.forEach(([n, l], i) => {
-    const x = 0.6 + i * 2.25;
-    card(s, x, 1.15, 2.05, 1.05);
-    s.addText(n, { x: x + 0.15, y: 1.22, w: 1.8, h: 0.6, fontFace: FONT, fontSize: 30, bold: true, color: i === 3 ? GREEN : NAVY, margin: 0, isTextBox: true });
-    s.addText(l, { x: x + 0.15, y: 1.8, w: 1.8, h: 0.3, fontFace: FONT, fontSize: 10.5, color: MUTED, margin: 0, isTextBox: true });
-  });
-  card(s, 0.6, 2.45, 4.3, 2.75);
-  heading(s, "Four test layers", 0.85, 2.62, 3.8);
-  bullets(s, [
-    "Domain: money precision, overdraft prevention, mutations return their history record",
-    "Application: fakes prove failed operations never reach commit, and history is staged before commit",
-    "SQLite: seeding once, restart persistence, newest-first order, concurrency conflict, all-or-nothing commit",
-    "HTTP: Post/Redirect/Get, inline error mapping, antiforgery, hidden error details, accessibility structure",
-  ], 0.85, 3.0, 3.85, 2.1, 10.5);
-  card(s, 5.15, 2.45, 4.35, 2.75);
-  heading(s, "Delivery on macOS", 5.4, 2.62, 3.8);
-  s.addText(["dotnet restore Atm.sln", "dotnet build Atm.sln --no-restore", "dotnet test Atm.sln --no-build", "dotnet run --project src/Atm.Web"].map((t, i) => ({ text: t, options: { breakLine: i < 3 } })),
-    { x: 5.4, y: 3.0, w: 3.9, h: 0.95, fontFace: MONO, fontSize: 10, color: TEXT, valign: "top", margin: 0, isTextBox: true });
-  s.addText([
-    { text: "Handoff artifacts: ", options: { bold: true, color: NAVY } },
-    { text: "SPEC.md, PLAN.md, six ADRs, the accessibility review, this deck, and a README anyone can follow. SQLite is created and seeded on first run; schema changes go through EF Core migrations." },
-  ], { x: 5.4, y: 4.05, w: 3.9, h: 1.05, fontFace: FONT, fontSize: 10.5, color: TEXT, valign: "top", margin: 0, isTextBox: true });
+  const slide = base("143 tests. Every boundary.", C.green, "Domain tests are pure. Application tests use hand-written fakes. Integration and HTTP tests exercise the real host with an isolated SQLite file per test, including concurrency conflicts, atomic rollback, Post/Redirect/Get, security, and accessibility structure. Commands: dotnet restore Atm.sln; dotnet build Atm.sln --no-restore; dotnet test Atm.sln --no-build.");
+  [["75", "Domain", "Invariants"], ["33", "Application", "Orchestration"], ["35", "Integration + HTTP", "Persistence and HTTP"]].forEach(([n, label, scope], i) => { const y = 1.34 + i * 1.07; addText(slide, n, 0.64, y, 0.92, 0.52, { fontSize: 34, bold: true, color: C.green }); addText(slide, label, 1.65, y + 0.02, 2.27, 0.28, { fontSize: 16, bold: true, fit: "shrink" }); addText(slide, scope, 1.65, y + 0.38, 2.27, 0.24, { fontSize: 12, color: C.muted, fit: "shrink" }); });
+  imageFrame(slide, SHOT("receipt.png"), 5.25, 1.22, 4.11, 3.20);
+  addText(slide, "A real receipt after redirect.", 5.25, 4.58, 4.11, 0.24, { fontSize: 12, color: C.green, align: "right" });
 }
 
-// ---------- 7. Tradeoffs and More-Compute Roadmap ----------
+// 7 — omissions and ordered next steps
 {
-  const s = base("Tradeoffs and what more compute would change", "Left is what was left out on purpose, and why that was the right call for this exercise. Right is the order I would add things with more time, starting with idempotency keys because Post/Redirect/Get handles refreshes but not a retried network request. The phone view shows the responsive layout already holds up.");
-  card(s, 0.6, 1.15, 3.6, 4.05);
-  heading(s, "Deliberately left out", 0.85, 1.32, 3.2);
-  bullets(s, [
-    "Authentication, users, cards and PINs",
-    "Fees, interest, overdraft facilities, cash inventory",
-    "Multiple currencies and sub-cent accounting",
-    "A JavaScript SPA or public API",
-    "Queues, services, cloud deployment",
-    "Idempotency keys (PRG covers refreshes, not retried requests)",
-  ], 0.85, 1.72, 3.15, 3.4, 11);
-  card(s, 4.4, 1.15, 3.5, 4.05);
-  heading(s, "With more compute, in order", 4.65, 1.32, 3.1, GREEN);
-  s.addText([
-    "Idempotency keys per submission", "Richer auditing: actor, request id, reversals", "Authentication and per-user accounts",
-    "Automated accessibility checks in CI", "Observability: structured logs, metrics, tracing", "Load tests against SQLite's write limits",
-    "Packaged deployment and configuration", "Browser-level end-to-end coverage",
-  ].map((t, i, a) => ({ text: t, options: { bullet: { type: "number" }, breakLine: i < a.length - 1 } })),
-    { x: 4.65, y: 1.72, w: 3.1, h: 3.4, fontFace: FONT, fontSize: 11, color: TEXT, valign: "top", margin: 0, paraSpaceAfter: 4, isTextBox: true });
-  // phone view (390x1400 at 1.2in wide => 325 px/in; show the top 3.4in)
-  card(s, 8.1, 1.15, 1.4, 4.05);
-  s.addImage({ path: SHOT("phone.png"), x: 8.2, y: 1.25, w: 1.2, h: 4.31, sizing: { type: "crop", x: 0, y: 0, w: 1.2, h: 3.85 } });
+  const slide = base("Tradeoffs and roadmap", C.blue, "The omissions are conscious. The roadmap begins with the correctness gap that Post/Redirect/Get does not solve: a retried network request. The phone capture proves the existing presentation adapter already reflows at 380 pixels.");
+  kicker(slide, "Omitted", 0.64, 1.30, 2.45, C.blue);
+  ["Identity", "Banking breadth", "Distributed operations"].forEach((value, i) => addText(slide, value, 0.64, 1.78 + i * 0.72, 2.45, 0.35, { fontSize: 19, bold: true, fit: "shrink" }));
+  slide.addShape(pptx.ShapeType.line, { x: 3.34, y: 1.29, w: 0, h: 3.34, line: { color: C.line, width: 1 } });
+  [["Next", "Idempotency, auditing, authentication"], ["Then", "Accessibility, observability, load tests"], ["Later", "Deployment, browser coverage"]].forEach(([stage, items], i) => { const y = 1.30 + i * 1.07; kicker(slide, stage, 3.70, y, 0.80, C.blue); addText(slide, items, 3.70, y + 0.38, 2.72, 0.52, { fontSize: 16, bold: true, fit: "shrink" }); });
+  imageFrame(slide, SHOT("phone.png"), 7.64, 1.18, 1.10, 3.62);
+  addText(slide, "Responsive at 380 px.", 6.90, 4.91, 2.58, 0.18, { fontSize: 10.5, color: C.blue, align: "center", fit: "shrink" });
 }
 
-pres.writeFile({ fileName: OUT }).then((f) => console.log("wrote", f));
+async function writeDeck() {
+  await pptx.writeFile({ fileName: OUT, compression: true });
+  const zip = await JSZip.loadAsync(fs.readFileSync(OUT));
+  const contentTypesPath = "[Content_Types].xml";
+  let contentTypes = await zip.file(contentTypesPath).async("string");
+  contentTypes = contentTypes.replace(/<Override PartName="\/ppt\/slideMasters\/slideMaster(?:[2-9]|[1-9][0-9]+)\.xml" ContentType="application\/vnd\.openxmlformats-officedocument\.presentationml\.slideMaster\+xml"\/>/g, "");
+  zip.file(contentTypesPath, contentTypes);
+  fs.writeFileSync(OUT, await zip.generateAsync({ type: "nodebuffer", compression: "DEFLATE" }));
+  console.log("wrote", OUT);
+}
+writeDeck();
