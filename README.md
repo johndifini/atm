@@ -26,6 +26,8 @@ dotnet build Atm.sln --no-restore
 dotnet run --project src/Atm.Web
 ```
 
+Open [http://localhost:5080](http://localhost:5080) after the app starts. The optional `https` launch profile uses `https://localhost:7080`.
+
 The SQLite database is created as `src/Atm.Web/atm.db` on first start (configurable through the `ConnectionStrings:Atm` setting) and is ignored by Git. Startup applies migrations and, when the database is empty, seeds two accounts named **Checking** and **Savings**, each with an opening balance of **$1,000.00**.
 
 Schema changes use the repo-local `dotnet-ef` tool (`dotnet tool restore` installs it):
