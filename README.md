@@ -28,15 +28,7 @@ dotnet run --project src/Atm.Web
 
 Open [http://localhost:5080](http://localhost:5080) after the app starts. The optional `https` launch profile uses `https://localhost:7080`.
 
-The SQLite database is created as `src/Atm.Web/atm.db` on first start (configurable through the `ConnectionStrings:Atm` setting) and is ignored by Git. Startup applies migrations and, when the database is empty, seeds two accounts named **Checking** and **Savings**, each with an opening balance of **$1,000.00**.
-
-Schema changes use the repo-local `dotnet-ef` tool (`dotnet tool restore` installs it):
-
-```bash
-dotnet ef migrations add YourMigrationName --project src/Atm.Infrastructure --output-dir Persistence/Migrations
-```
-
-Replace `YourMigrationName` with a name for the new migration. This command also works in PowerShell and Command Prompt.
+The SQLite database is created as `src/Atm.Web/atm.db` on first start (configurable through the `ConnectionStrings:Atm` setting) and is ignored by Git. If there are no accounts, the app creates **Checking** and **Savings** with an opening balance of **$1,000.00** each.
 
 ## Verify
 
@@ -58,4 +50,4 @@ dotnet test Atm.sln --no-build
 
 ## Status
 
-All six phases of [`PLAN.md`](PLAN.md) are complete: the framework-free domain model, the application ports and use cases, SQLite persistence with its first migration and startup seeding, the Razor Pages dashboard with Post/Redirect/Get and inline error mapping, HTTP tests over the real host, the accessibility review in [`docs/accessibility-review.md`](docs/accessibility-review.md), and the presentation deck with real screenshots under [`design/`](design/README.md).
+All six phases of [`PLAN.md`](PLAN.md) are complete: the framework-free domain model, the application ports and use cases, SQLite persistence with initial account setup, the Razor Pages dashboard with Post/Redirect/Get and inline error mapping, HTTP tests over the real host, the accessibility review in [`docs/accessibility-review.md`](docs/accessibility-review.md), and the presentation deck with real screenshots under [`design/`](design/README.md).
