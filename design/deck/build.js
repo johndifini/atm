@@ -100,7 +100,7 @@ WORD_BUDGETS.forEach((parts, index) => { const count = wordCount(parts); if (cou
 {
   const slide = base("Decisions and costs", C.orange, "The ADRs explain why each choice fits the exercise. This slide keeps the tradeoff visible: every simplification accepts a constraint. The common choice is the smallest architecture that keeps rules and boundaries legible.");
   const header = (value) => ({ text: value, options: { bold: true, color: C.orange, fill: { color: C.page }, fontFace: FONT, fontSize: 12.5 } });
-  const cell = (value, options = {}) => ({ text: value, options: { fontFace: FONT, fontSize: 17, color: C.text, valign: "mid", ...options } });
+  const cell = (value, options = {}) => ({ text: value, options: { fontFace: FONT, fontSize: 17, color: C.text, valign: "middle", ...options } });
   const rows = [[header("DECISION"), header("COST")], [cell("Razor Pages", { bold: true }), cell("Less client interactivity", { color: C.muted })], [cell("Modular monolith", { bold: true }), cell("Extra project structure", { color: C.muted })], [cell("SQLite + EF Core", { bold: true }), cell("Single-writer ceiling", { color: C.muted })], [cell("decimal Money", { bold: true }), cell("USD remains implicit", { color: C.muted })], [cell("Single user", { bold: true }), cell("No user isolation", { color: C.muted })]];
   slide.addTable(rows, { x: 0.64, y: 1.27, w: 8.72, h: 3.66, colW: [4.35, 4.37], rowH: [0.42, 0.65, 0.65, 0.65, 0.65, 0.64], border: { type: "solid", color: C.line, pt: 0.75 }, fill: { color: C.page }, margin: 0.10 });
 }
