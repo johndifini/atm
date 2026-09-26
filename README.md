@@ -30,6 +30,8 @@ Open [http://localhost:5080](http://localhost:5080) after the app starts.
 
 The SQLite database is created as `src/Atm.Web/atm.db` on first start (configurable through the `ConnectionStrings:Atm` setting) and is ignored by Git. If there are no accounts, the app creates **Checking** and **Savings** with an opening balance of **$1,000.00** each.
 
+Hint: try the Konami code.
+
 ## Verify
 
 After building the solution, run all test projects with:

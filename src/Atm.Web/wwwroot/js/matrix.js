@@ -96,7 +96,7 @@
       "</div>";
     pills.querySelector(".matrix-pill-red").addEventListener("click", function () {
       pills.querySelector(".matrix-pills-prompt").textContent =
-        "There is no spoon. There is, however, no overdraft.";
+        "Welcome to the real world. Balances here are decimal.";
     });
     pills.querySelector(".matrix-pill-blue").addEventListener("click", function () {
       setMatrix(false);
