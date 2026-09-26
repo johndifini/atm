@@ -31,7 +31,7 @@ Meet WCAG AA contrast and never communicate success or failure through color alo
 
 ## Deliverables in this directory
 
-- `atm-deck.pptx` — the seven-slide deck below, generated from real screenshots using the approved Jony Vibe presentation system: a `#121212` canvas, `#F5F5F5` type, and fixed accent roles: `#00F604` green is primary on every slide, `#F67F00` orange is secondary, and `#0077F6` blue is tertiary. Accents do not rotate between slides. Each slide targets no more than 36 authored words; detail belongs in speaker notes. It is a build output: change `deck/build.js` and regenerate rather than editing the file by hand.
+- `atm-deck.pptx` — the eight-slide deck below, generated from real screenshots using the approved Jony Vibe presentation system: a `#121212` canvas, `#F5F5F5` type, and fixed accent roles: `#00F604` green is primary on every slide, `#F67F00` orange is secondary, and `#0077F6` blue is tertiary. Accents do not rotate between slides. Each slide targets no more than 36 authored words; detail belongs in speaker notes. It is a build output: change `deck/build.js` and regenerate rather than editing the file by hand.
 - `deck/build.js` — the generator, with `deck/package.json` pinning its only tooling dependency. `pptxgenjs` is not part of `Atm.sln` and adds nothing to the application at runtime. The package override keeps its transitive `image-size` dependency above the vulnerable `<= 2.0.2` range reported in [GHSA-w3rx-r6r6-pgpr](https://github.com/advisories/GHSA-w3rx-r6r6-pgpr) and [GHSA-5p2g-fcmc-qvqq](https://github.com/advisories/GHSA-5p2g-fcmc-qvqq).
 
 ```bash
@@ -43,14 +43,15 @@ Pass an output path (`node build.js /tmp/preview.pptx`) to preview a change with
 Visual QA: export each rebuild to PDF with Microsoft PowerPoint, the app the deck is for, and inspect every slide. Keynote and Quick Look are not a pass/fail check, because they open files PowerPoint repairs; `a5f576f` fixed table cells that passed Keynote and made PowerPoint offer repair. The export script and its pitfalls are in The Borg's `.claude/rules/pptx-qa-uses-powerpoint.md`.
 - `screenshots/` — captures of the finished application taken with headless Chrome against a scratch database: `dashboard.png` (populated history), `receipt.png` (one-time success confirmation after Post/Redirect/Get), `overdraft.png` (inline insufficient-funds error with the typed value preserved), and `phone.png` (380px reflow with stacked cards and records).
 
-## Seven-slide deck
+## Eight-slide deck
 
 1. **ATM Coding Exercise** — scope, test count, the finished dashboard as the visual anchor, and a hint at the Konami-code easter egg.
-2. **Technology Stack** — Razor Pages with vanilla JavaScript and CSS, C# 14 on .NET 10, SQLite via EF Core 10, and xUnit with WebApplicationFactory; layering lives in the speaker notes.
-3. **Decisions and Their Costs** — a readable ledger for Razor Pages, modular monolith, SQLite, and 2-decimal USD.
-4. **Datastore Choice** — an in-memory store would have been enough; the SQLite file was chosen so balances survive restarts. SQLite in-memory, a hand-written store, EF Core InMemory, and Redis are weighed in the speaker notes.
-5. **Financial Operations Fail Without Partial State** — invariants, atomic history, concurrency, and a real rejected-overdraft state.
-6. **143 Tests by Layer** — domain, application, SQLite integration, HTTP behavior, a success receipt, and macOS commands.
-7. **Tradeoffs and Roadmap** — deliberate omissions, an ordered roadmap, and the real 380 px layout.
+2. **How I AI'ed** — how the work was split across AI agents: GPT-5.6 in Codex for the architecture interview and scaffold, Fable 5.1 in Claude Code for the six gated phases, and Opus 5.5 and GPT-6 for later docs, deck, and fixes. The notes explain choosing Fable 5.1 for speed over token cost.
+3. **Technology Stack** — Razor Pages with vanilla JavaScript and CSS, C# 14 on .NET 10, SQLite via EF Core 10, and xUnit with WebApplicationFactory; layering lives in the speaker notes.
+4. **Decisions and Their Costs** — a readable ledger for Razor Pages, modular monolith, SQLite, and 2-decimal USD.
+5. **Datastore Choice** — an in-memory store would have been enough; the SQLite file was chosen so balances survive restarts. SQLite in-memory, a hand-written store, EF Core InMemory, and Redis are weighed in the speaker notes.
+6. **Financial Operations Fail Without Partial State** — invariants, atomic history, concurrency, and a real rejected-overdraft state.
+7. **143 Tests by Layer** — domain, application, SQLite integration, HTTP behavior, a success receipt, and macOS commands.
+8. **Tradeoffs and Roadmap** — deliberate omissions, an ordered roadmap, and the real 380 px layout.
 
 No slide footers or slide numbers, and no slogan copy: every line states a fact about the application. Speaker notes keep their paragraph breaks, and the generator links ADR references in them to GitHub. Use a solid charcoal canvas, soft-white type, green as the dominant accent (orange only for a contrasting second group, blue only for a third), sparse diagrams, and each real screenshot once. Keep one focal element and no more than three supporting groups per slide. Aim for 36 authored words or fewer—title, labels, and body copy included—and move supporting detail to speaker notes before reducing type size. Use whitespace and hairlines instead of reproducing the application's card grid in the presentation.
