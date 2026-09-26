@@ -39,6 +39,8 @@ cd design/deck && npm install && node build.js
 ```
 
 Pass an output path (`node build.js /tmp/preview.pptx`) to preview a change without overwriting the committed deck.
+
+Visual QA: export each rebuild to PDF with Microsoft PowerPoint, the app the deck is for, and inspect every slide. Keynote and Quick Look are not a pass/fail check, because they open files PowerPoint repairs; `a5f576f` fixed table cells that passed Keynote and made PowerPoint offer repair. The export script and its pitfalls are in The Borg's `.claude/rules/pptx-qa-uses-powerpoint.md`.
 - `screenshots/` — captures of the finished application taken with headless Chrome against a scratch database: `dashboard.png` (populated history), `receipt.png` (one-time success confirmation after Post/Redirect/Get), `overdraft.png` (inline insufficient-funds error with the typed value preserved), and `phone.png` (380px reflow with stacked cards and records).
 
 ## Seven-slide deck

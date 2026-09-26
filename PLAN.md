@@ -73,7 +73,7 @@ Use cases are plain handler classes: `DepositHandler`, `WithdrawHandler`, `Trans
 
 - `design/screenshots/*.png` are real captures: the host runs against a scratch SQLite file, curl performs a deposit, withdrawal and transfer through the antiforgery-protected forms, and headless Chrome captures the dashboard, the receipt state, an overdraft error, and a 380px reflow (rendered through a local 380px iframe because headless Chrome enforces a minimum window width).
 - `design/atm-deck.pptx` is a build output of `design/deck/build.js` (pptxgenjs; tooling only, outside `Atm.sln`, adding no runtime dependency). Slides follow the outline in `design/README.md` one for one. The generator enforces Jony Vibe's 36-word target while speaker notes carry the narrative and delivery commands.
-- The `.pptx` uses the approved Jony Vibe presentation palette: charcoal `#121212`, soft white `#F5F5F5`, and one green, orange, or blue accent per slide. It was rendered slide by slide with macOS Quick Look; all seven slides were inspected at presentation size for overflow, screenshot crop, density, and footer collisions.
+- The `.pptx` uses the approved Jony Vibe presentation palette: charcoal `#121212`, soft white `#F5F5F5`, and one green, orange, or blue accent per slide. Visual QA exports it to PDF with Microsoft PowerPoint and inspects every slide at presentation size for overflow, screenshot crop, density, and footer collisions. Earlier passes used macOS Quick Look and Keynote, which missed the table cells PowerPoint repaired (`a5f576f`); see `design/README.md`.
 
 ## Transaction boundaries
 
