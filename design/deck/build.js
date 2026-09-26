@@ -1,4 +1,4 @@
-// Rebuilds the six-slide ATM case-study deck from real application screenshots.
+// Rebuilds the seven-slide ATM case-study deck from real application screenshots.
 // Approved Jony Vibe system: charcoal canvas, soft-white type, one restrained
 // accent per slide, and a 36-word target for authored on-slide copy.
 const pptxgen = require("pptxgenjs");
@@ -57,6 +57,7 @@ const WORD_BUDGETS = [
   ["ATM Coding Exercise", "Two accounts, persisted locally, covered by 143 tests.", "Hint: try the Konami code."],
   ["Technology stack", "Frontend", "Razor Pages, vanilla JavaScript, CSS", "No client framework or packages", "Backend", "C# 14 on .NET 10", "ASP.NET Core", "Database", "SQLite via EF Core 10", "Code-first migrations", "Testing", "xUnit, WebApplicationFactory, coverlet"],
   ["Decisions and costs", "Decision", "Cost", "Razor Pages", "Full page reload per action", "Modular monolith", "One feature spans four projects", "SQLite + EF Core", "Single-writer ceiling", "2-decimal USD", "Single-currency support"],
+  ["Datastore choice", "In-memory would suffice.", "Chosen", "SQLite file", "Survives restarts", "Considered", "SQLite in-memory", "Lost on restart", "Hand-written store", "Owns atomicity", "EF Core InMemory", "No transactions", "Redis", "Extra process"],
   ["Failure leaves no partial state", "Validate before mutation", "Commit balance and history together", "Reject stale writes", "Rejected overdraft. Persisted state stays unchanged."],
   ["143 tests by layer", "75 Domain", "33 Application", "35 Integration + HTTP", "Invariants", "Orchestration", "Persistence and HTTP", "Success receipt after Post/Redirect/Get."],
   ["Tradeoffs and roadmap", "Omitted", "Identity", "Banking breadth", "Distributed operations", "Next", "Double-submit protection, auditing, authentication", "Then", "Accessibility, observability, load tests", "Later", "Deployment, browser coverage", "Responsive at 380 px."],
@@ -90,14 +91,28 @@ WORD_BUDGETS.forEach((parts, index) => { const count = wordCount(parts); if (cou
 
 // 3 — decision ledger
 {
-  const slide = base("Decisions and costs", "The ADRs explain why each choice fits the exercise.\n\nRazor Pages (ADR-0001). Cost: a full page reload per action. The server renders HTML with minimal JavaScript, so the whole app is written in C# and ships as a single unit. A separate JavaScript front end (e.g., a React single-page app) would add its own npm build and a JSON API for the browser to call, because the browser would fetch data instead of receiving finished pages.\n\nModular monolith (ADR-0002). Cost: one feature spans four projects, so adding a transaction type touches Domain, Application, Infrastructure, and Web. The payoff is that business rules can be tested without the web host or the database. Microservices would add operational complexity with no payoff at this scope.\n\nSQLite + EF Core (ADR-0003). Cost: single-writer ceiling.\n• SQLite – single-file DB with near-zero setup; balances survive restarts.\n• EF Core – the ORM (the .NET counterpart to Hibernate).\n   – Transactions: saves a transfer's debit, credit, and history rows in a single DB transaction, so they either commit or roll back as a unit.\n   – Optimistic concurrency: rejects a write based on an outdated balance, e.g., two tabs withdrawing against the same $1,000 and overdrawing it. Doesn't lock account rows; assumes conflicts are rare.\nA server database is the upgrade path if concurrent load ever matters.\n\n2-decimal USD (ADR-0005). Cost: single-currency support. Amounts are decimal with at most two fractional digits, which rules out floating-point error. The two-digit rule fits USD only, and there is no currency field, so supporting another currency (e.g., JPY with 0 places or KWD with 3) would change the Money type.");
+  const slide = base("Decisions and costs", "The ADRs explain why each choice fits the exercise.\n\nRazor Pages (ADR-0001). Cost: a full page reload per action. The server renders HTML with minimal JavaScript, so the whole app is written in C# and ships as a single unit. A separate JavaScript front end (e.g., a React single-page app) would add its own npm build and a JSON API for the browser to call, because the browser would fetch data instead of receiving finished pages.\n\nModular monolith (ADR-0002). Cost: one feature spans four projects, so adding a transaction type touches Domain, Application, Infrastructure, and Web. The payoff is that business rules can be tested without the web host or the database. Microservices would add operational complexity with no payoff at this scope.\n\nSQLite + EF Core (ADR-0003). Cost: single-writer ceiling. A server database is the upgrade path if concurrent load ever matters. The next slide covers the datastore choice.\n\n2-decimal USD (ADR-0005). Cost: single-currency support. Amounts are decimal with at most two fractional digits, which rules out floating-point error. The two-digit rule fits USD only, and there is no currency field, so supporting another currency (e.g., JPY with 0 places or KWD with 3) would change the Money type.");
   const header = (value, color) => ({ text: value, options: { bold: true, color, fill: { color: C.page }, fontFace: FONT, fontSize: 12.5 } });
   const cell = (value, options = {}) => ({ text: value, options: { fontFace: FONT, fontSize: 17, color: C.text, valign: "middle", ...options } });
   const rows = [[header("DECISION", C.primary), header("COST", C.secondary)], [cell("Razor Pages", { bold: true }), cell("Full page reload per action", { color: C.muted })], [cell("Modular monolith", { bold: true }), cell("One feature spans four projects", { color: C.muted })], [cell("SQLite + EF Core", { bold: true }), cell("Single-writer ceiling", { color: C.muted })], [cell("2-decimal USD", { bold: true }), cell("Single-currency support", { color: C.muted })]];
   slide.addTable(rows, { x: 0.64, y: 1.27, w: 8.72, h: 3.66, colW: [4.35, 4.37], rowH: [0.42, 0.81, 0.81, 0.81, 0.81], border: { type: "solid", color: C.line, pt: 0.75 }, fill: { color: C.page }, margin: 0.10 });
 }
 
-// 4 — correctness in one failure state
+// 4 — datastore choice and the in-memory alternatives
+{
+  const slide = base("Datastore choice", "An in-memory store would have been enough. I chose a persistent one so balances and history survive restarts (ADR-0003).\n• SQLite – single-file DB with near-zero setup.\n• EF Core – the ORM (the .NET counterpart to Hibernate).\n   – Transactions: saves a transfer's debit, credit, and history rows in a single DB transaction, so they either commit or roll back as a unit.\n   – Optimistic concurrency: rejects a write based on an outdated balance, e.g., two tabs withdrawing against the same $1,000 and overdrawing it. Doesn't lock account rows; assumes conflicts are rare.\n\nEvery option sits behind the same Application ports, so switching is an Infrastructure-only change.\n• SQLite in-memory – an in-memory connection string with one connection held open. Keeps EF Core, migrations, transactions, and constraints, but data is lost on restart. The best in-memory choice, e.g., for a demo mode.\n• Hand-written store – dictionaries behind a single lock. No dependencies, but the code itself must commit balance and history together instead of relying on a database transaction.\n• EF Core InMemory provider – discouraged by Microsoft. It isn't relational, ignores transactions, and enforces no constraints, so it can't prove the invariants.\n• Redis – a separate server process to install and run, and atomic transfers need MULTI/EXEC or Lua scripts. More operational machinery than this exercise needs, and still volatile unless its persistence is configured.");
+  addText(slide, "In-memory would suffice.", 0.91, 0.98, 8.45, 0.26, { fontSize: 13, color: C.muted });
+  const rows = [["Chosen", C.primary, "SQLite file", "Survives restarts"], ["Considered", C.secondary, "SQLite in-memory", "Lost on restart"], ["", null, "Hand-written store", "Owns atomicity"], ["", null, "EF Core InMemory", "No transactions"], ["", null, "Redis", "Extra process"]];
+  rows.forEach(([label, accent, option, reason], i) => {
+    const y = 1.62 + i * 0.70;
+    if (i > 0) line(slide, 0.64, y - 0.17, 8.72);
+    if (label) kicker(slide, label, 0.64, y + 0.06, 1.90, accent);
+    addText(slide, option, 2.70, y, 3.30, 0.36, { fontSize: 19, bold: true, fit: "shrink" });
+    addText(slide, reason, 6.10, y + 0.04, 3.26, 0.32, { fontSize: 15, color: i === 0 ? C.text : C.muted, fit: "shrink" });
+  });
+}
+
+// 5 — correctness in one failure state
 {
   const slide = base("Failure leaves no partial state", "The screenshot is a real rejected overdraft. The typed value stays visible, the error names the available balance, and persisted state is unchanged. Account versions turn stale writes into a safe retry instead of lost data.");
   ["Validate before mutation", "Commit balance and history together", "Reject stale writes"].forEach((value, i) => { addText(slide, String(i + 1).padStart(2, "0"), 0.64, 1.43 + i * 1.10, 0.45, 0.30, { fontSize: 13, bold: true, color: C.primary }); addText(slide, value, 1.22, 1.38 + i * 1.10, 3.00, 0.56, { fontSize: 20, bold: true, fit: "shrink" }); });
@@ -105,7 +120,7 @@ WORD_BUDGETS.forEach((parts, index) => { const count = wordCount(parts); if (cou
   addText(slide, "Rejected overdraft. Persisted state stays unchanged.", 4.63, 4.91, 4.73, 0.22, { fontSize: 11.5, bold: true, color: C.primary, align: "right", fit: "shrink" });
 }
 
-// 5 — evidence over commands
+// 6 — evidence over commands
 {
   const slide = base("143 tests by layer", "Domain tests are pure. Application tests use hand-written fakes. Integration and HTTP tests exercise the real host with an isolated SQLite file per test, including concurrency conflicts, atomic rollback, Post/Redirect/Get, security, and accessibility structure. Commands: dotnet restore Atm.sln; dotnet build Atm.sln --no-restore; dotnet test Atm.sln --no-build.");
   [["75", "Domain", "Invariants"], ["33", "Application", "Orchestration"], ["35", "Integration + HTTP", "Persistence and HTTP"]].forEach(([n, label, scope], i) => { const y = 1.34 + i * 1.07; addText(slide, n, 0.64, y, 0.92, 0.52, { fontSize: 34, bold: true, color: C.primary }); addText(slide, label, 1.65, y + 0.02, 2.27, 0.28, { fontSize: 16, bold: true, fit: "shrink" }); addText(slide, scope, 1.65, y + 0.38, 2.27, 0.24, { fontSize: 12, color: C.muted, fit: "shrink" }); });
@@ -113,7 +128,7 @@ WORD_BUDGETS.forEach((parts, index) => { const count = wordCount(parts); if (cou
   addText(slide, "Success receipt after Post/Redirect/Get.", 5.25, 4.58, 4.11, 0.24, { fontSize: 12, color: C.primary, align: "right" });
 }
 
-// 6 — omissions and ordered next steps
+// 7 — omissions and ordered next steps
 {
   const slide = base("Tradeoffs and roadmap", "The omissions are conscious. The roadmap begins with the correctness gap that Post/Redirect/Get does not solve: a retried network request. The phone capture proves the existing presentation adapter already reflows at 380 pixels.\n\nIn a real bank, the Domain and Application layers would become a backend service behind an API that every channel (ATM, mobile, web, branch) shares, so the rules live in one place. This ATM would be one thin client. Splitting that backend into microservices becomes worthwhile once separate teams own accounts, transfers, and fraud and need to deploy independently. The inward dependencies here are what make that extraction straightforward.");
   kicker(slide, "Omitted", 0.64, 1.30, 2.45, C.secondary);
