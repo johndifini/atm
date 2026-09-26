@@ -46,7 +46,7 @@ Visual QA: export each rebuild to PDF with Microsoft PowerPoint, the app the dec
 ## Eight-slide deck
 
 1. **ATM Coding Exercise** — scope, test count, the finished dashboard as the visual anchor, and a hint at the Konami-code easter egg.
-2. **How I AI'ed** — how the work was split across AI agents: GPT-5.6 in Codex for the architecture interview and scaffold, Fable 5.1 in Claude Code for the six gated phases, and Opus 5.5 and GPT-6 for later docs, deck, and fixes. The notes explain choosing Fable 5.1 for speed over token cost.
+2. **How I AI'ed** — how the work was split across AI agents: GPT-5.6 Sol in Codex for the architecture interview and scaffold, Fable 5.1 in Claude Code for the six gated phases, and Opus 5.5 and GPT-6 Sol for later docs, deck, and fixes. The notes explain choosing Fable 5.1 because rework cost more than tokens, and how a plan-strong, execute-cheap split would change it with more time.
 3. **Technology Stack** — Razor Pages with vanilla JavaScript and CSS, C# 14 on .NET 10, SQLite via EF Core 10, and xUnit with WebApplicationFactory; layering lives in the speaker notes.
 4. **Decisions and Their Costs** — a readable ledger for Razor Pages, modular monolith, SQLite, and 2-decimal USD.
 5. **Datastore Choice** — an in-memory store would have been enough; the SQLite file was chosen so balances survive restarts. SQLite in-memory, a hand-written store, EF Core InMemory, and Redis are weighed in the speaker notes.
