@@ -39,14 +39,18 @@ public sealed class RestartAndAssetsTests
         var html = await http.GetStringAsync("/");
 
         var stylesheet = Regex.Match(html, "<link rel=\"stylesheet\" href=\"([^\"]+)\"").Groups[1].Value;
-        var script = Regex.Match(html, "<script src=\"([^\"]+)\"").Groups[1].Value;
+        var scripts = Regex.Matches(html, "<script src=\"([^\"]+)\"").Select(m => m.Groups[1].Value).ToList();
         Assert.NotEmpty(stylesheet);
-        Assert.NotEmpty(script);
+        Assert.Contains(scripts, s => s.StartsWith("/js/site."));
+        Assert.Contains(scripts, s => s.StartsWith("/js/matrix."));
 
         var css = await http.GetAsync(stylesheet);
-        var js = await http.GetAsync(script);
         Assert.Equal(HttpStatusCode.OK, css.StatusCode);
         Assert.Equal("text/css", css.Content.Headers.ContentType?.MediaType);
-        Assert.Equal(HttpStatusCode.OK, js.StatusCode);
+        foreach (var script in scripts)
+        {
+            var js = await http.GetAsync(script);
+            Assert.Equal(HttpStatusCode.OK, js.StatusCode);
+        }
     }
 }

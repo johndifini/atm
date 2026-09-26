@@ -12,6 +12,7 @@ Build a quiet banking utility: trustworthy, compact, and subordinate to the arch
 - One transaction-history table below, newest first; collapse to stacked records on narrow screens.
 - Neutral system font at a 16px base, 8px spacing scale, 8–12px radii, and restrained borders or shadows.
 - No marketing shell, illustration, logo exercise, gradients, or animation.
+- One deliberate exception: the Konami code (↑ ↑ ↓ ↓ ← → ← → B A, outside form fields) toggles a Matrix theme with digital rain for the rest of the tab's session. It is opt-in and presentation-only, keeps AA contrast, falls back to a static theme under reduced motion, and exits with Esc, the blue pill, or the code again.
 
 Suggested tokens:
 

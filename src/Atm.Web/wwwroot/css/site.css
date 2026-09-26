@@ -236,3 +236,66 @@ select, input[type="number"] {
     flex-shrink: 0;
   }
 }
+
+/* Easter egg: Matrix theme, toggled by the Konami code in js/matrix.js.
+   A deliberate, opt-in exception to the no-animation direction; it re-points
+   the tokens so every component keeps WCAG AA contrast on black. */
+html.matrix {
+  --page: #000000;
+  --surface: rgba(0, 12, 4, 0.92);
+  --text: #B6FFC4;
+  --muted: #6FD983;
+  --primary: #3DFF6E;
+  --success: #3DFF6E;
+  --error: #FF7A6B;
+  --border: #1F6B33;
+  --control-border: #3E9E55;
+  color-scheme: dark;
+}
+html.matrix body {
+  background: #000;
+  font-family: ui-monospace, "SF Mono", Menlo, Consolas, monospace;
+  text-shadow: 0 0 6px rgba(61, 255, 110, 0.35);
+}
+html.matrix .site-header,
+html.matrix main { position: relative; z-index: 1; }
+html.matrix .site-header .container {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-1) var(--space-2);
+}
+html.matrix .notice { background: var(--surface); }
+html.matrix .button { color: #001A07; text-shadow: none; }
+html.matrix .button:hover { background: #8CFFA8; border-color: #8CFFA8; }
+html.matrix :focus-visible { outline-color: #D8FFD8; }
+
+.matrix-rain {
+  position: fixed;
+  inset: 0;
+  z-index: 0;
+  pointer-events: none;
+}
+
+.matrix-pills {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-1) var(--space-2);
+}
+.matrix-pills-prompt { margin: 0; }
+.matrix-pills-actions { display: flex; gap: var(--space-1); }
+.matrix-pill {
+  font: inherit;
+  font-weight: 600;
+  color: #FFFFFF;
+  text-shadow: none;
+  border: 0;
+  border-radius: 999px;
+  padding: 4px var(--space-2);
+  white-space: nowrap;
+  cursor: pointer;
+}
+.matrix-pill-red { background: #C62828; }
+.matrix-pill-blue { background: #1565C0; }

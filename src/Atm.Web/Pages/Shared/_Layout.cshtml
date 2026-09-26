@@ -5,6 +5,8 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>@ViewData["Title"] - ATM</title>
     <link rel="stylesheet" href="~/css/site.css" asp-append-version="true" />
+    @* Restore the Konami-code theme before first paint (see js/matrix.js). *@
+    <script>try { if (sessionStorage.getItem("atm.matrix") === "on") document.documentElement.classList.add("matrix"); } catch (e) { }</script>
 </head>
 <body>
     <a class="skip-link" href="#main">Skip to content</a>
@@ -17,5 +19,6 @@
         @RenderBody()
     </main>
     <script src="~/js/site.js" asp-append-version="true"></script>
+    <script src="~/js/matrix.js" asp-append-version="true"></script>
 </body>
 </html>
