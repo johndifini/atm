@@ -2,7 +2,7 @@
 
 A focused, single-user web ATM exercise for managing two accounts: deposit, withdraw, transfer, inspect balances, and review transaction history.
 
-This repository currently contains the approved **architecture scaffold**. Feature implementation is intentionally left to the downstream engineer; the durable requirements and decisions are captured in [`SPEC.md`](SPEC.md), [`PLAN.md`](PLAN.md), and [`docs/adr/`](docs/adr/README.md).
+The requirements and decisions behind the implementation are captured in [`SPEC.md`](SPEC.md), [`PLAN.md`](PLAN.md), and [`docs/adr/`](docs/adr/README.md); [Status](#status) summarizes what is built.
 
 ## Stack
 
