@@ -2,6 +2,11 @@
 
 A focused, single-user web ATM exercise for managing two accounts: deposit, withdraw, transfer, inspect balances, and review transaction history.
 
+> [!IMPORTANT]
+> **📊 [View the presentation deck (PDF)](design/atm-deck.pdf)**: seven slides covering the stack, the decisions and their costs, the datastore choice, how the work was split across AI agents, and the roadmap. The editable [`atm-deck.pptx`](design/atm-deck.pptx) includes speaker notes.
+
+[![ATM Coding Exercise: first slide of the presentation deck](design/atm-deck-preview.png)](design/atm-deck.pdf)
+
 The requirements and decisions behind the implementation are captured in [`SPEC.md`](SPEC.md), [`PLAN.md`](PLAN.md), and [`docs/adr/`](docs/adr/README.md); [Status](#status) summarizes what is built.
 
 ## Stack
