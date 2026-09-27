@@ -69,7 +69,7 @@ const WORD_BUDGETS = [
   ["Datastore choice", "In-memory would suffice.", "Chosen", "SQLite file", "Survives restarts", "Considered", "SQLite in-memory", "Lost on restart", "Hand-written store", "Owns atomicity", "EF Core InMemory", "No transactions", "Redis", "Extra process"],
   ["How I AI'ed", "Frame", "GPT-5.6 Sol", "I approved spec, plan, ADRs", "Build", "Fable 5.1", "Six phases, tests green per commit", "Chose to minimize rework over tokens", "Refine", "Opus 5.5, GPT-6 Sol", "Docs, deck, fixes"],
   ["143 tests by layer", "75 Domain", "33 Application", "35 Integration + HTTP", "Business rules", "Orchestration", "Persistence and HTTP", "Deposit confirmed. Refreshing won’t repeat it."],
-  ["Roadmap", "Omitted", "Identity", "Banking breadth", "Distributed operations", "Now", "Idempotency keys, auditing, authentication", "Next", "Accessibility, observability, load tests", "Later", "Deployment, browser coverage", "Responsive at 380 px."],
+  ["Roadmap", "Omitted", "Identity", "Banking breadth", "Distributed operations", "Now", "Idempotency keys, auditing, authentication", "Next", "Accessibility, observability, load tests", "Later", "Deployment"],
 ];
 // "How I AI'ed" runs one word over by the author's choice: an explicit tradeoff line.
 const WORD_LIMIT_OVERRIDES = { 5: 37 };
@@ -147,13 +147,11 @@ WORD_BUDGETS.forEach((parts, index) => { const limit = WORD_LIMIT_OVERRIDES[inde
 
 // 7 — omissions and ordered next steps
 {
-  const slide = base("Roadmap", "Omitted on purpose; SPEC.md lists all three as out of scope.\n\n• Identity: no login, card, PIN, or session. There is one local user, so there is nothing to authenticate.\n\n• Banking breadth: no fees, interest, overdraft lines, scheduled payments, other currencies, or external bank rails. Two seeded accounts and three operations keep the review on correctness.\n\n• Distributed operations: one process and one SQLite file, with no services, queues, or cloud infrastructure. In a real bank, the Domain and Application layers would become a backend service behind an API that every channel (ATM, mobile, web, branch) shares, so the rules live in one place, and this ATM would be one thin client. Microservices become worthwhile once separate teams own accounts, transfers, and fraud and need to deploy independently. The inward dependencies here make that extraction straightforward.\n\nRoadmap\n\n• Now, idempotency keys: Post/Redirect/Get, a disabled submit button, and confirmation dialogs already stop refreshes and double-clicks. The remaining gap is a retried network request: the server commits, the response is lost, and the retry runs the operation again. EF Core's concurrency token does not catch it, because the retry is a valid second write against the new balance. Idempotency keys close it.\n\n• Now, auditing: every balance change already writes a history record in the same transaction. A real audit trail also records who acted and from where, which needs identity first.\n\n• Now, authentication: login and per-user authorization, the prerequisite for multiple users and attributable audit records.\n\n• Next, accessibility: a manual WCAG 2.2 AA pass is done. Screen-reader testing (VoiceOver, NVDA) and automated axe or Lighthouse checks in CI are not.\n\n• Next, observability: structured logs, metrics, and traces, still without logging sensitive form values.\n\n• Next, load tests: measure SQLite's single-writer ceiling and how often concurrency conflicts reach users under contention.\n\n• Later, deployment: a container, a CI/CD pipeline, and hosting. Production deployment is out of scope today.\n\n• Later, browser coverage: the HTTP tests drive the app the way a browser would but do not run one. Cross-browser end-to-end tests (e.g., Playwright) would.\n\nThe phone capture shows the same page reflowing at 380 pixels, with no separate mobile build.");
+  const slide = base("Roadmap", "# Omitted (out of scope in SPEC.md)\n- Identity\n  - No login, card, PIN, or session; one local user\n- Banking breadth\n  - No fees, interest, overdraft lines, scheduled payments, other currencies, or bank rails\n- Distributed operations\n  - One process, one SQLite file\n  - In a real bank, Domain and Application would become a backend service shared by every client (ATMs, mobile app, online banking, branch tellers)\n  - Microservices only once separate teams need to deploy independently\n\n# Roadmap\n- Now\n  - Idempotency keys: a retry after a lost response repeats the operation; Post/Redirect/Get and EF Core's concurrency token cannot catch it\n  - Auditing: history exists; add who acted and from where\n  - Authentication: prerequisite for multiple users and attributable audits\n- Next\n  - Accessibility: screen-reader testing, axe or Lighthouse in CI\n  - Observability: structured logs, metrics, traces\n  - Load tests: find SQLite's single-writer ceiling\n- Later\n  - Deployment: container, CI/CD, hosting");
   kicker(slide, "Omitted", 0.64, 1.30, 2.45, C.secondary);
   ["Identity", "Banking breadth", "Distributed operations"].forEach((value, i) => addText(slide, value, 0.64, 1.78 + i * 0.72, 2.45, 0.35, { fontSize: 19, bold: true, fit: "shrink" }));
   slide.addShape(pptx.ShapeType.line, { x: 3.34, y: 1.29, w: 0, h: 3.34, line: { color: C.line, width: 1 } });
-  [["Now", "Idempotency keys, auditing, authentication"], ["Next", "Accessibility, observability, load tests"], ["Later", "Deployment, browser coverage"]].forEach(([stage, items], i) => { const y = 1.30 + i * 1.07; kicker(slide, stage, 3.70, y, 0.80, C.primary); addText(slide, items, 3.70, y + 0.38, 3.00, 0.52, { fontSize: 16, bold: true, fit: "shrink" }); });
-  imageFrame(slide, SHOT("phone.png"), 7.64, 1.18, 1.10, 3.62);
-  addText(slide, "Responsive at 380 px.", 6.90, 4.91, 2.58, 0.18, { fontSize: 10.5, color: C.primary, align: "center", fit: "shrink" });
+  [["Now", "Idempotency keys, auditing, authentication"], ["Next", "Accessibility, observability, load tests"], ["Later", "Deployment"]].forEach(([stage, items], i) => { const y = 1.30 + i * 1.07; kicker(slide, stage, 3.70, y, 0.80, C.primary); addText(slide, items, 3.70, y + 0.38, 5.66, 0.52, { fontSize: 16, bold: true, fit: "shrink" }); });
 }
 
 // pptxgenjs writes each slide's notes as one run with embedded line breaks and cannot
@@ -169,14 +167,22 @@ async function linkNotes(zip, notesPath) {
   let nextId = (rels.match(/Id="rId\d+"/g) || []).length + 1;
   const terms = Object.keys(NOTE_LINKS);
   const pattern = new RegExp(`(${terms.map((t) => t.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")).join("|")})`);
-  const paragraphs = match[1].split(/\r?\n/).map((line) => {
+  const paragraphs = match[1].split(/\r?\n/).map((raw) => {
+    // "- " starts a bullet; each two leading spaces nest it one outline level deeper.
+    // "# " marks a bold section header.
+    const bullet = raw.match(/^( *)- (.*)$/);
+    const header = !bullet && raw.startsWith("# ");
+    const line = bullet ? bullet[2] : header ? raw.slice(2) : raw;
+    const runPr = header ? '<a:rPr lang="en-US" b="1" dirty="0"/>' : rPr;
+    const lvl = bullet ? Math.floor(bullet[1].length / 2) : 0;
+    const pPr = bullet ? `<a:pPr marL="${228600 * (lvl + 1)}" lvl="${lvl}" indent="-228600"><a:buFont typeface="Arial"/><a:buChar char="${lvl ? "–" : "•"}"/></a:pPr>` : "";
     const runs = line.split(pattern).filter(Boolean).map((part) => {
-      if (!NOTE_LINKS[part]) return `<a:r>${rPr}<a:t>${part}</a:t></a:r>`;
+      if (!NOTE_LINKS[part]) return `<a:r>${runPr}<a:t>${part}</a:t></a:r>`;
       const id = `rId${nextId++}`;
       rels = rels.replace("</Relationships>", `<Relationship Id="${id}" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/hyperlink" Target="${NOTE_LINKS[part]}" TargetMode="External"/></Relationships>`);
-      return `<a:r><a:rPr lang="en-US" dirty="0"><a:hlinkClick r:id="${id}"/></a:rPr><a:t>${part}</a:t></a:r>`;
+      return `<a:r><a:rPr lang="en-US"${header ? ' b="1"' : ""} dirty="0"><a:hlinkClick r:id="${id}"/></a:rPr><a:t>${part}</a:t></a:r>`;
     });
-    return `<a:p>${runs.join("")}<a:endParaRPr lang="en-US" dirty="0"/></a:p>`;
+    return `<a:p>${pPr}${runs.join("")}<a:endParaRPr lang="en-US" dirty="0"/></a:p>`;
   });
   zip.file(notesPath, xml.replace(single, () => paragraphs.join("")));
   zip.file(relsPath, rels);
