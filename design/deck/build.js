@@ -12,6 +12,8 @@ const OUT = process.argv[2] ? path.resolve(process.argv[2]) : path.join(DESIGN, 
 // Accent roles are fixed across the deck: green is primary, orange secondary, blue tertiary.
 const C = { page: "121212", surface: "1B1B1B", text: "F5F5F5", muted: "A9ADB3", line: "333333", primary: "00F604", secondary: "F67F00", tertiary: "0077F6" };
 const REPO = "https://github.com/johndifini/atm/blob/main";
+const BORG = "https://github.com/johndifini/theborg/tree/main";
+const ARCHITETTO = `${BORG}/architetto`;
 // Speaker-note terms that become hyperlinks during post-processing.
 const NOTE_LINKS = {
   ADRs: "https://github.com/johndifini/atm/tree/main/docs/adr",
@@ -19,6 +21,13 @@ const NOTE_LINKS = {
   "ADR-0002": `${REPO}/docs/adr/0002-modular-monolith.md`,
   "ADR-0003": `${REPO}/docs/adr/0003-sqlite-ef-core.md`,
   "ADR-0005": `${REPO}/docs/adr/0005-money-transaction-semantics.md`,
+  "SPEC.md": `${REPO}/SPEC.md`,
+  "PLAN.md": `${REPO}/PLAN.md`,
+  "AGENTS.md": `${REPO}/AGENTS.md`,
+  "README.md": `${REPO}/README.md`,
+  Architetto: ARCHITETTO,
+  "jony-vibe": `${BORG}/jony-vibe`,
+  C4PO: `${BORG}/c4po`,
 };
 const FONT = "Avenir Next";
 const pptx = new pptxgen();
@@ -55,7 +64,7 @@ function arrow(slide, x1, y1, x2, y2, accent, dashed = false) {
 function wordCount(parts) { return parts.join(" ").trim().split(/\s+/).filter(Boolean).length; }
 const WORD_BUDGETS = [
   ["ATM Coding Exercise", "Two accounts, persisted locally, covered by 143 tests.", "Hint: try the Konami code."],
-  ["How I AI'ed", "Frame", "GPT-5.6 Sol", "I approved spec, plan, ADRs", "Build", "Fable 5.1", "Six phases, tests green per commit", "Rework cost more than tokens", "Refine", "Opus 5.5, GPT-6 Sol", "Docs, deck, fixes"],
+  ["How I AI'ed", "Frame", "Architetto (GPT-5.6 Sol)", "I approved spec, plan, ADRs", "Build", "Fable 5.1", "Six phases, tests green per commit", "Chose to minimize rework over tokens", "Refine", "Opus 5.5, GPT-6 Sol", "Docs, deck, fixes"],
   ["Technology stack", "Frontend", "Razor Pages, vanilla JavaScript, CSS", "No client framework or packages", "Backend", "C# 14 on .NET 10", "ASP.NET Core", "Database", "SQLite via EF Core 10", "Code-first migrations", "Testing", "xUnit, WebApplicationFactory, coverlet"],
   ["Decisions and costs", "Decision", "Cost", "Razor Pages", "Full page reload per action", "Modular monolith", "One feature spans four projects", "SQLite + EF Core", "Single-writer ceiling", "2-decimal USD", "Single-currency support"],
   ["Datastore choice", "In-memory would suffice.", "Chosen", "SQLite file", "Survives restarts", "Considered", "SQLite in-memory", "Lost on restart", "Hand-written store", "Owns atomicity", "EF Core InMemory", "No transactions", "Redis", "Extra process"],
@@ -63,7 +72,9 @@ const WORD_BUDGETS = [
   ["143 tests by layer", "75 Domain", "33 Application", "35 Integration + HTTP", "Invariants", "Orchestration", "Persistence and HTTP", "Success receipt after Post/Redirect/Get."],
   ["Tradeoffs and roadmap", "Omitted", "Identity", "Banking breadth", "Distributed operations", "Next", "Double-submit protection, auditing, authentication", "Then", "Accessibility, observability, load tests", "Later", "Deployment, browser coverage", "Responsive at 380 px."],
 ];
-WORD_BUDGETS.forEach((parts, index) => { const count = wordCount(parts); if (count > 36) throw new Error(`Slide ${index + 1} has ${count} authored words; limit is 36.`); });
+// Slide 2 runs two words over by the author's choice: an explicit tradeoff line and the Architetto link.
+const WORD_LIMIT_OVERRIDES = { 2: 38 };
+WORD_BUDGETS.forEach((parts, index) => { const limit = WORD_LIMIT_OVERRIDES[index + 1] ?? 36; const count = wordCount(parts); if (count > limit) throw new Error(`Slide ${index + 1} has ${count} authored words; limit is ${limit}.`); });
 
 // 1 — outcome first
 {
@@ -79,8 +90,8 @@ WORD_BUDGETS.forEach((parts, index) => { const count = wordCount(parts); if (cou
 
 // 2 — how the work was split across AI agents
 {
-  const slide = base("How I AI'ed", "I split the work by strength: a ChatGPT agent (GPT-5.6 Sol in Codex) for the architecture interview and scaffold, Claude Code for the implementation, and both for later docs and deck work.\n\nFrame. The agent read my notes and interviewed me on four open questions: a time-boxed scope, whether data should survive restarts, the seed accounts and balances, and GitHub repo visibility. It proposed the stack and I approved it. Before any feature code, the scaffold committed SPEC.md, PLAN.md, six ADRs, and AGENTS.md. AGENTS.md is the rulebook every agent reads: decimal money, no negative balances, atomic history, and changes it must ask me about first, such as adding a dependency.\n\nBuild. Claude Code with Fable 5.1 implemented the six phases in PLAN.md in order: domain, application, persistence, web, HTTP tests with an accessibility pass, then screenshots and the deck. Each phase had to leave the build and every test green before it was committed and the next one started. Domain tests were written before the domain code.\n\nWhy Fable 5.1. It was probably more model than the job needed. I was short on time and wanted the strongest end-to-end implementation model available; Opus 5.5 had not shipped yet. In a time box, a failed or mediocre phase costs wall-clock time to find and redo, and this build had subtle traps: decimal money, atomic transfers, concurrency tokens, and migrations. Rework would have cost more than tokens. Quick questions went to a lighter model (Sonnet 5).\n\nThe usual split is the reverse: the strongest model plans and cheaper models execute. Here the plan also came from a frontier model (GPT-5.6 Sol). With more time, I'd have Fable 5.1 plan each phase and a cheaper model such as Sonnet 5 implement it. The phase gates don't depend on the model, so the same tests would catch its regressions.\n\nRefine. Later work used Opus 5.5 and GPT-6 Sol in Codex: Windows setup steps in the README, a Dependabot fix in the deck tooling, the deck's visual redesign, and the wording on these slides. I directed each change and sent back output that didn't hold up; the first deck skipped the design consultation and was redone.");
-  const rows = [["Frame", "GPT-5.6 Sol", "I approved spec, plan, ADRs"], ["Build", "Fable 5.1", "Six phases, tests green per commit", "Rework cost more than tokens"], ["Refine", "Opus 5.5, GPT-6 Sol", "Docs, deck, fixes"]];
+  const slide = base("How I AI'ed", "Frame: Architetto (GPT-5.6 Sol in Codex)\n• Architetto is my open-source architect agent: it bootstraps new repositories and records every foundational decision.\n• Interviewed me on four open questions: time box, persistence, seed accounts, repo visibility.\n• The model proposed the stack; I approved it.\n• Scaffolded before any feature code: SPEC.md, PLAN.md, six ADRs, AGENTS.md.\n   – AGENTS.md lists the rules every coding agent must follow in this repo: money is decimal, balances never go negative, each balance change saves together with its history record, and the agent asks me before adding a dependency.\n\nBuild: Fable 5.1 in Claude Code\n• Six phases in order: domain, application, persistence, web, HTTP tests and accessibility, deck.\n• Each phase committed only with the build and every test green; domain tests written first.\n• Why Fable 5.1: I know the best approach is to plan with the strongest model and execute with cheaper ones, but when I reached the implementation phase, I was running short on time. Therefore, I chose the strongest end-to-end model at the time (a whopping week ago, before Opus 5.5 shipped).\n   – This build had traps that fail quietly: money rounding, half-finished transfers, lost updates, migrations. A bug there costs a phase of rework.\n   – Quick questions went to Sonnet 5.\n• With more time: Fable 5.1 plans each phase, Sonnet 5 implements it, the same tests gate it.\n\nRefine: Opus 5.5 and GPT-6 Sol in Codex\n• Windows setup steps in README.md, a Dependabot fix, the deck redesign, slide wording.\n• The design direction came from jony-vibe, my design-consultation agent; the first deck skipped that consultation and was redone.\n• C4PO, my workspace-admin agent, moved the deck's visual checks from Keynote to PowerPoint after Keynote passed a deck that PowerPoint had to repair.\n• I sent back what didn't hold up.");
+  const rows = [["Frame", [{ text: "Architetto", options: { hyperlink: { url: ARCHITETTO, tooltip: "Architetto on GitHub" }, color: C.primary, underline: { style: "sng" } } }, { text: " (GPT-5.6 Sol)" }], "I approved spec, plan, ADRs"], ["Build", "Fable 5.1", "Six phases, tests green per commit", "Chose to minimize rework over tokens"], ["Refine", "Opus 5.5, GPT-6 Sol", "Docs, deck, fixes"]];
   rows.forEach(([label, value, detail, tradeoff], i) => {
     const y = 1.38 + i * 1.10 + (i > 1 ? 0.20 : 0);
     if (i > 0) line(slide, 0.64, y - 0.22, 8.72);
