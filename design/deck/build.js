@@ -1,4 +1,4 @@
-// Rebuilds the eight-slide ATM case-study deck from real application screenshots.
+// Rebuilds the seven-slide ATM case-study deck from real application screenshots.
 // Approved Jony Vibe system: charcoal canvas, soft-white type, one restrained
 // accent per slide, and a 36-word target for authored on-slide copy.
 const pptxgen = require("pptxgenjs");
@@ -68,8 +68,7 @@ const WORD_BUDGETS = [
   ["Technology stack", "Frontend", "Razor Pages, vanilla JavaScript, CSS", "No client framework or packages", "Backend", "C# 14 on .NET 10", "ASP.NET Core", "Database", "SQLite via EF Core 10", "Code-first migrations", "Testing", "xUnit, WebApplicationFactory, coverlet"],
   ["Decisions and costs", "Decision", "Cost", "Razor Pages", "Full page reload per action", "Modular monolith", "One feature spans four projects", "SQLite + EF Core", "Single-writer ceiling", "2-decimal USD", "Single-currency support"],
   ["Datastore choice", "In-memory would suffice.", "Chosen", "SQLite file", "Survives restarts", "Considered", "SQLite in-memory", "Lost on restart", "Hand-written store", "Owns atomicity", "EF Core InMemory", "No transactions", "Redis", "Extra process"],
-  ["Failure leaves no partial state", "Validate before mutation", "Commit balance and history together", "Reject stale writes", "Rejected overdraft. Persisted state stays unchanged."],
-  ["143 tests by layer", "75 Domain", "33 Application", "35 Integration + HTTP", "Invariants", "Orchestration", "Persistence and HTTP", "Success receipt after Post/Redirect/Get."],
+  ["143 tests by layer", "75 Domain", "33 Application", "35 Integration + HTTP", "Business rules", "Orchestration", "Persistence and HTTP", "Deposit confirmed. Refreshing won’t repeat it."],
   ["Tradeoffs and roadmap", "Omitted", "Identity", "Banking breadth", "Distributed operations", "Next", "Double-submit protection, auditing, authentication", "Then", "Accessibility, observability, load tests", "Later", "Deployment, browser coverage", "Responsive at 380 px."],
 ];
 // Slide 2 runs two words over by the author's choice: an explicit tradeoff line and the Architetto link.
@@ -138,23 +137,15 @@ WORD_BUDGETS.forEach((parts, index) => { const limit = WORD_LIMIT_OVERRIDES[inde
   });
 }
 
-// 6 — correctness in one failure state
+// 6 — evidence by layer
 {
-  const slide = base("Failure leaves no partial state", "The screenshot is a real rejected overdraft. The typed value stays visible, the error names the available balance, and persisted state is unchanged. Account versions turn stale writes into a safe retry instead of lost data.");
-  ["Validate before mutation", "Commit balance and history together", "Reject stale writes"].forEach((value, i) => { addText(slide, String(i + 1).padStart(2, "0"), 0.64, 1.43 + i * 1.10, 0.45, 0.30, { fontSize: 13, bold: true, color: C.primary }); addText(slide, value, 1.22, 1.38 + i * 1.10, 3.00, 0.56, { fontSize: 20, bold: true, fit: "shrink" }); });
-  imageFrame(slide, SHOT("overdraft.png"), 4.63, 1.24, 4.73, 3.59);
-  addText(slide, "Rejected overdraft. Persisted state stays unchanged.", 4.63, 4.91, 4.73, 0.22, { fontSize: 11.5, bold: true, color: C.primary, align: "right", fit: "shrink" });
-}
-
-// 7 — evidence over commands
-{
-  const slide = base("143 tests by layer", "Domain tests are pure. Application tests use hand-written fakes. Integration and HTTP tests exercise the real host with an isolated SQLite file per test, including concurrency conflicts, atomic rollback, Post/Redirect/Get, security, and accessibility structure. Commands: dotnet restore Atm.sln; dotnet build Atm.sln --no-restore; dotnet test Atm.sln --no-build.");
-  [["75", "Domain", "Invariants"], ["33", "Application", "Orchestration"], ["35", "Integration + HTTP", "Persistence and HTTP"]].forEach(([n, label, scope], i) => { const y = 1.34 + i * 1.07; addText(slide, n, 0.64, y, 0.92, 0.52, { fontSize: 34, bold: true, color: C.primary }); addText(slide, label, 1.65, y + 0.02, 2.27, 0.28, { fontSize: 16, bold: true, fit: "shrink" }); addText(slide, scope, 1.65, y + 0.38, 2.27, 0.24, { fontSize: 12, color: C.muted, fit: "shrink" }); });
+  const slide = base("143 tests by layer", "• Domain (75): pure tests. No database, no I/O, no fakes. They call the business rules directly (money, accounts, transfers), so they are fast and deterministic.\n\n• Application (33): use cases run against hand-written fakes for the store and the clock.\n\n• Integration + HTTP (35): the real host, with an isolated SQLite file per test.\n\n• Those cover concurrency conflicts, atomic rollback, Post/Redirect/Get, security, and accessibility structure.");
+  [["75", "Domain", "Business rules"], ["33", "Application", "Orchestration"], ["35", "Integration + HTTP", "Persistence and HTTP"]].forEach(([n, label, scope], i) => { const y = 1.34 + i * 1.07; addText(slide, n, 0.64, y, 0.92, 0.52, { fontSize: 34, bold: true, color: C.primary }); addText(slide, label, 1.65, y + 0.02, 2.27, 0.28, { fontSize: 16, bold: true, fit: "shrink" }); addText(slide, scope, 1.65, y + 0.38, 2.27, 0.24, { fontSize: 12, color: C.muted, fit: "shrink" }); });
   imageFrame(slide, SHOT("receipt.png"), 5.25, 1.22, 4.11, 3.20);
-  addText(slide, "Success receipt after Post/Redirect/Get.", 5.25, 4.58, 4.11, 0.24, { fontSize: 12, color: C.primary, align: "right" });
+  addText(slide, "Deposit confirmed. Refreshing won’t repeat it.", 5.25, 4.58, 4.11, 0.24, { fontSize: 12, color: C.primary, align: "right" });
 }
 
-// 8 — omissions and ordered next steps
+// 7 — omissions and ordered next steps
 {
   const slide = base("Tradeoffs and roadmap", "The omissions are conscious. The roadmap begins with the correctness gap that Post/Redirect/Get does not solve: a retried network request. The phone capture proves the existing presentation adapter already reflows at 380 pixels.\n\nIn a real bank, the Domain and Application layers would become a backend service behind an API that every channel (ATM, mobile, web, branch) shares, so the rules live in one place. This ATM would be one thin client. Splitting that backend into microservices becomes worthwhile once separate teams own accounts, transfers, and fraud and need to deploy independently. The inward dependencies here are what make that extraction straightforward.");
   kicker(slide, "Omitted", 0.64, 1.30, 2.45, C.secondary);
