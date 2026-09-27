@@ -68,8 +68,7 @@ const WORD_BUDGETS = [
   ["Decisions and costs", "Decision", "Cost", "Razor Pages", "Full page reload per action", "Modular monolith", "One feature spans four projects", "SQLite + EF Core", "Single-writer ceiling", "2-decimal USD", "Single-currency support"],
   ["Datastore choice", "In-memory would suffice.", "Chosen", "SQLite file", "Survives restarts", "Considered", "SQLite in-memory", "Lost on restart", "Hand-written store", "Owns atomicity", "EF Core InMemory", "No transactions", "Redis", "Extra process"],
   ["How I AI'ed", "Frame", "GPT-5.6 Sol", "I approved spec, plan, ADRs", "Build", "Fable 5.1", "Six phases, tests green per commit", "Chose to minimize rework over tokens", "Refine", "Opus 5.5, GPT-6 Sol", "Docs, deck, fixes"],
-  ["143 tests by layer", "75 Domain", "33 Application", "35 Integration + HTTP", "Business rules", "Orchestration", "Persistence and HTTP", "Deposit confirmed. Refreshing won’t repeat it."],
-  ["Roadmap", "Omitted", "Identity", "Banking breadth", "Distributed operations", "Now", "Idempotency keys, cross-model review, authentication", "Next", "Accessibility, observability, load tests", "Later", "Deployment"],
+  ["Roadmap", "Omitted", "Identity", "Banking breadth", "Distributed operations", "Now", "Idempotency keys, cross-model review, authentication", "Next", "Accessibility, observability", "Later", "Deployment"],
 ];
 // "How I AI'ed" runs one word over by the author's choice: an explicit tradeoff line.
 const WORD_LIMIT_OVERRIDES = { 5: 37 };
@@ -137,21 +136,13 @@ WORD_BUDGETS.forEach((parts, index) => { const limit = WORD_LIMIT_OVERRIDES[inde
   });
 }
 
-// 6 — evidence by layer
+// 6 — omissions and ordered next steps
 {
-  const slide = base("143 tests by layer", "• Domain (75): pure tests. No database, no I/O, no fakes. They call the business rules directly (money, accounts, transfers), so they are fast and deterministic.\n\n• Application (33): use cases run against hand-written fakes for the store and the clock.\n\n• Integration + HTTP (35): the real host, with an isolated SQLite file per test.\n\n• Those cover concurrency conflicts, atomic rollback, Post/Redirect/Get, security, and accessibility structure.");
-  [["75", "Domain", "Business rules"], ["33", "Application", "Orchestration"], ["35", "Integration + HTTP", "Persistence and HTTP"]].forEach(([n, label, scope], i) => { const y = 1.34 + i * 1.07; addText(slide, n, 0.64, y, 0.92, 0.52, { fontSize: 34, bold: true, color: C.primary }); addText(slide, label, 1.65, y + 0.02, 2.27, 0.28, { fontSize: 16, bold: true, fit: "shrink" }); addText(slide, scope, 1.65, y + 0.38, 2.27, 0.24, { fontSize: 12, color: C.muted, fit: "shrink" }); });
-  imageFrame(slide, SHOT("receipt.png"), 5.25, 1.22, 4.11, 3.20);
-  addText(slide, "Deposit confirmed. Refreshing won’t repeat it.", 5.25, 4.58, 4.11, 0.24, { fontSize: 12, color: C.primary, align: "right" });
-}
-
-// 7 — omissions and ordered next steps
-{
-  const slide = base("Roadmap", "# Omitted (out of scope in SPEC.md)\n- Identity\n  - No login, card, PIN, or session; one local user\n- Banking breadth\n  - No fees, interest, overdraft lines, scheduled payments, other currencies, or bank rails\n- Distributed operations\n  - One process, one SQLite file\n  - In a real bank, Domain and Application would become a backend service shared by every client (ATMs, mobile app, online banking, branch tellers)\n  - Microservices only once separate teams need to deploy independently\n\n# Roadmap\n- Now\n  - Idempotency keys: a retry after a lost response repeats the operation; Post/Redirect/Get and EF Core's concurrency token cannot catch it\n  - Cross-model code review: Fable 5.1 wrote the implementation, so have a different model (GPT-6 Sol) review it; a second model does not share the author's blind spots\n  - Authentication: prerequisite for multiple users and attributable audits\n- Next\n  - Accessibility: screen-reader testing, axe or Lighthouse in CI\n    - Known gap: with JavaScript on, Tab cannot reach the Withdraw and Transfer tabs (in BACKLOG.md)\n  - Observability: structured logs, metrics, traces\n  - Load tests: find SQLite's single-writer ceiling\n- Later\n  - Deployment: container, CI/CD, hosting");
+  const slide = base("Roadmap", "# Omitted (out of scope in SPEC.md)\n- Identity\n  - No login, card, PIN, or session; one local user\n- Banking breadth\n  - No fees, interest, overdraft lines, scheduled payments, other currencies, or bank rails\n- Distributed operations\n  - One process, one SQLite file\n  - In a real bank, Domain and Application would become a backend service shared by every client (ATMs, mobile app, online banking, branch tellers)\n\n# Roadmap\n- Now\n  - Idempotency keys: a retry after a lost response repeats the operation; Post/Redirect/Get and EF Core's concurrency token cannot catch it\n  - Cross-model code review: Fable 5.1 wrote the implementation, so have a different model (GPT-6 Sol) review it; a second model does not share the author's blind spots\n  - Authentication: prerequisite for multiple users and attributable audits\n- Next\n  - Accessibility: screen-reader testing, axe or Lighthouse in CI\n    - Known gap: with JavaScript on, Tab cannot reach the Withdraw and Transfer tabs (in BACKLOG.md)\n  - Observability: structured logs, metrics, traces\n- Later\n  - Deployment: container, CI/CD, hosting");
   kicker(slide, "Omitted", 0.64, 1.30, 2.45, C.secondary);
   ["Identity", "Banking breadth", "Distributed operations"].forEach((value, i) => addText(slide, value, 0.64, 1.78 + i * 0.72, 2.45, 0.35, { fontSize: 19, bold: true, fit: "shrink" }));
   slide.addShape(pptx.ShapeType.line, { x: 3.34, y: 1.29, w: 0, h: 3.34, line: { color: C.line, width: 1 } });
-  [["Now", "Idempotency keys, cross-model review, authentication"], ["Next", "Accessibility, observability, load tests"], ["Later", "Deployment"]].forEach(([stage, items], i) => { const y = 1.30 + i * 1.07; kicker(slide, stage, 3.70, y, 0.80, C.primary); addText(slide, items, 3.70, y + 0.38, 5.66, 0.52, { fontSize: 16, bold: true, fit: "shrink" }); });
+  [["Now", "Idempotency keys, cross-model review, authentication"], ["Next", "Accessibility, observability"], ["Later", "Deployment"]].forEach(([stage, items], i) => { const y = 1.30 + i * 1.07; kicker(slide, stage, 3.70, y, 0.80, C.primary); addText(slide, items, 3.70, y + 0.38, 5.66, 0.52, { fontSize: 16, bold: true, fit: "shrink" }); });
 }
 
 // pptxgenjs writes each slide's notes as one run with embedded line breaks and cannot
