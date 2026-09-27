@@ -67,28 +67,29 @@ const WORD_BUDGETS = [
   ["Technology stack", "Frontend", "Razor Pages, vanilla JavaScript, CSS", "No client framework or packages", "Backend", "C# 14 on .NET 10", "ASP.NET Core", "Database", "SQLite via EF Core 10", "Code-first migrations", "Testing", "xUnit, WebApplicationFactory, coverlet"],
   ["Decisions and costs", "Decision", "Cost", "Razor Pages", "Full page reload per action", "Modular monolith", "One feature spans four projects", "SQLite + EF Core", "Single-writer ceiling", "2-decimal USD", "Single-currency support"],
   ["Datastore choice", "In-memory would suffice.", "Chosen", "SQLite file", "Survives restarts", "Considered", "SQLite in-memory", "Lost on restart", "Hand-written store", "Owns atomicity", "EF Core InMemory", "No transactions", "Redis", "Extra process"],
+  ["Best framework for the model", "Chosen", "ASP.NET Core", "Compile-time checks but fewer examples", "Runner-up", "Django", "Most examples but runtime-only errors", "Spring Boot", "Typed but slow tests", "Node.js", "Popular but fast-changing", "Ranked by", "How soon LLM mistakes surface"],
   ["How I AI'ed", "Frame", "GPT-5.6 Sol", "I approved spec, plan, ADRs", "Build", "Fable 5.1", "Six phases, tests green per commit", "Chose to minimize rework over tokens", "Refine", "Opus 5.5, GPT-6 Sol", "Docs, deck, fixes"],
   ["Roadmap", "Omitted", "Identity", "Banking breadth", "Distributed operations", "Now", "Idempotency keys, cross-model review, authentication", "Next", "Accessibility, observability", "Later", "Deployment"],
 ];
-// "How I AI'ed" runs one word over by the author's choice: an explicit tradeoff line.
-const WORD_LIMIT_OVERRIDES = { 5: 37 };
+// Two slides run one word over by the author's choice: "Best framework for the model"
+// keeps "Ranked by", and "How I AI'ed" keeps an explicit tradeoff line.
+const WORD_LIMIT_OVERRIDES = { 5: 37, 6: 37 };
 WORD_BUDGETS.forEach((parts, index) => { const limit = WORD_LIMIT_OVERRIDES[index + 1] ?? 36; const count = wordCount(parts); if (count > limit) throw new Error(`Slide ${index + 1} has ${count} authored words; limit is ${limit}.`); });
 
 // 1 — outcome first
 {
   const slide = pptx.addSlide(); slide.background = { color: C.page };
-  kicker(slide, "Case study", 0.64, 0.50, 2.8, C.primary);
   addText(slide, "ATM", 0.64, 0.93, 3.10, 0.65, { fontSize: 47, bold: true, color: C.primary });
   addText(slide, "Coding Exercise", 0.64, 1.60, 3.48, 0.54, { fontSize: 27, bold: true, fit: "shrink" });
   addText(slide, "Two accounts, persisted locally,\ncovered by 143 tests.", 0.64, 2.48, 3.18, 0.62, { fontSize: 15, color: C.muted, breakLine: true });
   imageFrame(slide, SHOT("dashboard.png"), 4.17, 0.50, 5.19, 4.04);
   addText(slide, "Hint: try the Konami code.", 4.17, 4.68, 5.19, 0.23, { fontSize: 11.5, color: C.primary });
-  slide.addNotes("Open with the finished product, running against a scratch SQLite database. The intentionally narrow scope keeps the review on correctness, architectural boundaries, and evidence. The hint points at an opt-in easter egg: the Konami code (up, up, down, down, left, right, left, right, B, A) toggles a Matrix theme; Esc, the blue pill, or the code again exits it.");
+  slide.addNotes("Runs against a scratch SQLite database.\n\nThe intentionally narrow scope keeps the review on correctness, architectural boundaries, and evidence.\n\nThe Konami code is up, up, down, down, left, right, left, right, B, A.");
 }
 
 // 2 — technology stack
 {
-  const slide = base("Technology stack", "No client-side framework or npm packages ship with the app.\nPages are server-rendered Razor Pages with a small amount of vanilla JavaScript and one “hand-written” stylesheet.\n\nThe solution is a modular monolith of four projects (Domain, Application, Infrastructure, Web) with dependencies pointing inward, recorded in ADR-0002.\nEF Core and SQLite live only in the Infrastructure project.\n\nTests use xUnit, WebApplicationFactory for in-process HTTP, and coverlet for coverage.");
+  const slide = base("Technology stack", "Minimal dependencies: no client-side framework or npm packages.\nPages are server-rendered Razor Pages with a small amount of vanilla JavaScript and one “hand-written” stylesheet.\n\nThe solution is a modular monolith of four projects (Domain, Application, Infrastructure, Web) with dependencies pointing inward, recorded in ADR-0002.\nEF Core and SQLite live only in the Infrastructure project.\n\nTests use xUnit, WebApplicationFactory for in-process HTTP, and coverlet for coverage.");
   const rows = [["Frontend", "Razor Pages, vanilla JavaScript, CSS", "No client framework or packages"], ["Backend", "C# 14 on .NET 10", "ASP.NET Core"], ["Database", "SQLite via EF Core 10", "Code-first migrations"], ["Testing", "xUnit, WebApplicationFactory, coverlet", ""]];
   rows.forEach(([label, value, detail], i) => {
     const y = 1.38 + i * 1.00;
@@ -101,7 +102,7 @@ WORD_BUDGETS.forEach((parts, index) => { const limit = WORD_LIMIT_OVERRIDES[inde
 
 // 3 — decision ledger
 {
-  const slide = base("Decisions and costs", "The ADRs explain why each choice fits the exercise.\n\nRazor Pages (ADR-0001). Cost: a full page reload per action. The server renders HTML with minimal JavaScript, so the whole app is written in C# and ships as a single unit. A separate JavaScript front end (e.g., a React single-page app) would add its own npm build and a JSON API for the browser to call, because the browser would fetch data instead of receiving finished pages.\n\nModular monolith (ADR-0002). Cost: one feature spans four projects, so adding a transaction type touches Domain, Application, Infrastructure, and Web. The payoff is that business rules can be tested without the web host or the database. Microservices would add operational complexity with no payoff at this scope.\n\nSQLite + EF Core (ADR-0003). Cost: single-writer ceiling. A server database is the upgrade path if concurrent load ever matters. The next slide covers the datastore choice.\n\n2-decimal USD (ADR-0005). Cost: single-currency support. Amounts are decimal with at most two fractional digits, which rules out floating-point error. The two-digit rule fits USD only, and there is no currency field, so supporting another currency (e.g., JPY with 0 places or KWD with 3) would change the Money type.");
+  const slide = base("Decisions and costs", "# Razor Pages (ADR-0001)\n**Cost**: a full page reload per action.\nThe server renders HTML with minimal JavaScript, so the whole app is written in C# and ships as a single unit. A separate JavaScript front end (e.g., a React single-page app) would add its own npm build and a JSON API for the browser to call, because the browser would fetch data instead of receiving finished pages.\n\n# Modular monolith (ADR-0002)\n**Cost**: one feature spans four projects, so adding a transaction type touches Domain, Application, Infrastructure, and Web.\nThe payoff is that business rules can be tested without the web host or the database. Microservices would add operational complexity with no payoff at this scope.\n\n# SQLite + EF Core (ADR-0003)\n**Cost**: single-writer ceiling.\nA server database is the upgrade path if concurrent load ever matters. The next slide covers the datastore choice.\n\n# 2-decimal USD (ADR-0005)\n**Cost**: single-currency support.\nAmounts are decimal with at most two fractional digits, which rules out floating-point error. The two-digit rule fits USD but not many other currencies.");
   const header = (value, color) => ({ text: value, options: { bold: true, color, fill: { color: C.page }, fontFace: FONT, fontSize: 12.5 } });
   const cell = (value, options = {}) => ({ text: value, options: { fontFace: FONT, fontSize: 17, color: C.text, valign: "middle", ...options } });
   const rows = [[header("DECISION", C.primary), header("COST", C.secondary)], [cell("Razor Pages", { bold: true }), cell("Full page reload per action", { color: C.muted })], [cell("Modular monolith", { bold: true }), cell("One feature spans four projects", { color: C.muted })], [cell("SQLite + EF Core", { bold: true }), cell("Single-writer ceiling", { color: C.muted })], [cell("2-decimal USD", { bold: true }), cell("Single-currency support", { color: C.muted })]];
@@ -122,7 +123,23 @@ WORD_BUDGETS.forEach((parts, index) => { const limit = WORD_LIMIT_OVERRIDES[inde
   });
 }
 
-// 5 — how the work was split across AI agents
+// 5 — which framework a coding model can implement and verify most reliably
+{
+  const slide = base("Best framework for the model", "# Ranked by how soon LLM mistakes surface\n- A model writes, runs, and fixes code; the sooner an error appears, the fewer turns it wastes\n- A fast-changing framework can confuse an LLM into mixing in a pattern from an older version; newer or niche frameworks, released after a model's training cutoff, are where it is weakest\n- **ASP.NET Core** (chosen)\n  - Pro: the compiler catches type and null errors before tests run\n  - Pro: in-process HTTP tests run in seconds\n  - Con: less public code; outdated patterns (Startup.cs) linger in examples\n- **Django**\n  - Pro: most public examples; stable API\n  - Con: no static types, so errors wait for a test to hit them\n- **Spring Boot**\n  - Pro: huge corpus; static types\n  - Con: wiring errors appear at startup; tests start slowly\n  - Con: the javax-to-jakarta rename splits examples\n- **Node.js**\n  - Pro: huge corpus; TypeScript types\n  - Con: no default stack; fastest-changing ecosystem");
+  const rows = [["Chosen", C.primary, "ASP.NET Core", "Compile-time checks but fewer examples"], ["Runner-up", C.secondary, "Django", "Most examples but runtime-only errors"], ["", null, "Spring Boot", "Typed but slow tests"], ["", null, "Node.js", "Popular but fast-changing"]];
+  rows.forEach(([label, accent, option, reason], i) => {
+    const y = 1.42 + i * 0.66;
+    if (i > 0) line(slide, 0.64, y - 0.16, 8.72);
+    if (label) kicker(slide, label, 0.64, y + 0.06, 1.90, accent);
+    addText(slide, option, 2.70, y, 2.50, 0.36, { fontSize: 19, bold: true, fit: "shrink" });
+    addText(slide, reason, 5.20, y + 0.04, 4.16, 0.32, { fontSize: 15, color: i === 0 ? C.text : C.muted, fit: "shrink" });
+  });
+  line(slide, 0.64, 4.20, 8.72, C.muted);
+  kicker(slide, "Ranked by", 0.64, 4.44, 1.90, C.primary);
+  addText(slide, "How soon LLM mistakes surface", 2.70, 4.38, 6.66, 0.36, { fontSize: 19, bold: true, fit: "shrink" });
+}
+
+// 6 — how the work was split across AI agents
 {
   const slide = base("How I AI'ed", "Frame: GPT-5.6 Sol in Codex with my architect agent\n• Architetto is my open-source architect agent: it bootstraps new repositories and records every foundational decision.\n• Interviewed me on four open questions: time box, persistence, seed accounts, repo visibility.\n• The model proposed the stack; I approved it.\n• Scaffolded before any feature code: SPEC.md, PLAN.md, six ADRs, AGENTS.md.\n   – AGENTS.md lists the rules for this repo: money is decimal, balances never go negative, etc.\n\nBuild: Fable 5.1 in Claude Code\n• Why Fable 5.1: I know the best approach is to plan with the strongest model and execute with cheaper ones, but when I reached the implementation phase, I was running short on time. Therefore, I chose the strongest end-to-end model at the time (a whopping week ago, before Opus 5.5 shipped).\n• Six phases in order: domain, application, persistence, web, HTTP tests and accessibility, deck.\n• Each phase committed only with the build and every test green; domain tests written first.\n\nRefine: Opus 5.5 and GPT-6 Sol in Codex\n• Windows setup steps in README.md, a Dependabot fix, the deck redesign, slide wording.\n• The design direction came from jony-vibe, my design-consultation agent; the first deck skipped that consultation and was redone.\n• c4po, my workspace-admin agent, moved the deck's visual checks from Keynote to PowerPoint after Keynote passed a deck that PowerPoint had to repair.");
   const rows = [["Frame", "GPT-5.6 Sol", "I approved spec, plan, ADRs"], ["Build", "Fable 5.1", "Six phases, tests green per commit", "Chose to minimize rework over tokens"], ["Refine", "Opus 5.5, GPT-6 Sol", "Docs, deck, fixes"]];
@@ -136,7 +153,7 @@ WORD_BUDGETS.forEach((parts, index) => { const limit = WORD_LIMIT_OVERRIDES[inde
   });
 }
 
-// 6 — omissions and ordered next steps
+// 7 — omissions and ordered next steps
 {
   const slide = base("Roadmap", "# Omitted (out of scope in SPEC.md)\n- Identity\n  - No login, card, PIN, or session; one local user\n- Banking breadth\n  - No fees, interest, overdraft lines, scheduled payments, other currencies, or bank rails\n- Distributed operations\n  - One process, one SQLite file\n  - In a real bank, Domain and Application would become a backend service shared by every client (ATMs, mobile app, online banking, branch tellers)\n\n# Roadmap\n- Now\n  - Idempotency keys: a retry after a lost response repeats the operation; Post/Redirect/Get and EF Core's concurrency token cannot catch it\n  - Cross-model code review: Fable 5.1 wrote the implementation, so have a different model (GPT-6 Sol) review it; a second model does not share the author's blind spots\n  - Authentication: prerequisite for multiple users and attributable audits\n- Next\n  - Accessibility: screen-reader testing, axe or Lighthouse in CI\n    - Known gap: with JavaScript on, Tab cannot reach the Withdraw and Transfer tabs (in BACKLOG.md)\n  - Observability: structured logs, metrics, traces\n- Later\n  - Deployment: container, CI/CD, hosting");
   kicker(slide, "Omitted", 0.64, 1.30, 2.45, C.secondary);
@@ -164,14 +181,17 @@ async function linkNotes(zip, notesPath) {
     const bullet = raw.match(/^( *)- (.*)$/);
     const header = !bullet && raw.startsWith("# ");
     const line = bullet ? bullet[2] : header ? raw.slice(2) : raw;
-    const runPr = header ? '<a:rPr lang="en-US" b="1" dirty="0"/>' : rPr;
     const lvl = bullet ? Math.floor(bullet[1].length / 2) : 0;
     const pPr = bullet ? `<a:pPr marL="${228600 * (lvl + 1)}" lvl="${lvl}" indent="-228600"><a:buFont typeface="Arial"/><a:buChar char="${lvl ? "–" : "•"}"/></a:pPr>` : "";
-    const runs = line.split(pattern).filter(Boolean).map((part) => {
-      if (!NOTE_LINKS[part]) return `<a:r>${runPr}<a:t>${part}</a:t></a:r>`;
-      const id = `rId${nextId++}`;
-      rels = rels.replace("</Relationships>", `<Relationship Id="${id}" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/hyperlink" Target="${NOTE_LINKS[part]}" TargetMode="External"/></Relationships>`);
-      return `<a:r><a:rPr lang="en-US"${header ? ' b="1"' : ""} dirty="0"><a:hlinkClick r:id="${id}"/></a:rPr><a:t>${part}</a:t></a:r>`;
+    // "**text**" bolds a span inside a line.
+    const runs = line.split(/\*\*(.+?)\*\*/).flatMap((span, i) => {
+      const bold = header || i % 2 === 1;
+      return span.split(pattern).filter(Boolean).map((part) => {
+        if (!NOTE_LINKS[part]) return `<a:r>${bold ? '<a:rPr lang="en-US" b="1" dirty="0"/>' : rPr}<a:t>${part}</a:t></a:r>`;
+        const id = `rId${nextId++}`;
+        rels = rels.replace("</Relationships>", `<Relationship Id="${id}" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/hyperlink" Target="${NOTE_LINKS[part]}" TargetMode="External"/></Relationships>`);
+        return `<a:r><a:rPr lang="en-US"${bold ? ' b="1"' : ""} dirty="0"><a:hlinkClick r:id="${id}"/></a:rPr><a:t>${part}</a:t></a:r>`;
+      });
     });
     return `<a:p>${pPr}${runs.join("")}<a:endParaRPr lang="en-US" dirty="0"/></a:p>`;
   });
