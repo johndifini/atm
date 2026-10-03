@@ -2,6 +2,19 @@
 
 This repository is a single-user web ATM coding exercise. The architecture scaffold is approved; feature work begins from [`SPEC.md`](SPEC.md) and [`PLAN.md`](PLAN.md), not from assumptions.
 
+## Directory Structure
+
+- `../` → The Borg workspace's `repos/` directory. This repo is an independent git repo inside it, bootstrapped by the workspace's Architetto agent.
+- `../../` → The Borg workspace root, holding the workspace agents (including the `jony-vibe/` design agent) and the shared `cerebruh/` knowledge base. Neither parent exists in a standalone clone.
+- [`SPEC.md`](SPEC.md) → Authoritative behavior. Keep it truthful when implementation settles an edge case.
+- [`PLAN.md`](PLAN.md) → The approved build order.
+- [`BACKLOG.md`](BACKLOG.md) → Deferred work and known gaps. Every item carries its own approval gate. Re-read it from disk immediately before writing it, and make the narrowest edit that does the job.
+- [`README.md`](README.md) → Public overview, run instructions, and the deck callout.
+- [`docs/adr/`](docs/adr/README.md) → Foundational decisions, ADR-0001 to ADR-0006.
+- [`docs/accessibility-review.md`](docs/accessibility-review.md) → WCAG 2.2 AA review of the dashboard and its findings.
+- `src/` → The four production projects (see Architecture contract). `tests/` → Domain, Application, and integration test projects.
+- [`design/`](design/README.md) → The approved narrative and visual direction (`README.md`); the built deck (`atm-deck.pptx`, `atm-deck.pdf`); its generator (`deck/build.js`); and the app captures it uses (`screenshots/`).
+
 ## Architecture contract
 
 - `src/Atm.Domain` contains framework-free business rules.
