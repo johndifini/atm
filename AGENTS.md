@@ -75,3 +75,30 @@ The finished project includes a slide deck explaining approach, decisions, trade
 ## Workspace integration
 
 The machine-local `.claude/commands` symlink inherits workspace commands and is intentionally ignored. `CLAUDE.md` is a compatibility wrapper and must contain exactly `@AGENTS.md`.
+
+The bindings below restate workspace rules. Those rules live outside this repo and do not load here, so these lines are not duplicates: do not delete them.
+
+- **Design routing** (workspace `AGENTS.md` → Design, taste, and UI). Visual, brand, layout, and presentation decisions go through the workspace's `../../jony-vibe/` design agent. That covers the slide deck and its screenshots, not just the web UI. A recorded consultation covers only what it covered, so a new artifact type needs a new consultation. A harness design skill's own visual rules do not replace it.
+- **Closing sections** (workspace `AGENTS.md` → Communication style). End a substantial, multi-part, or decision-heavy response with a short `## Recap`. When a useful follow-up exists, follow the recap with this exact shape:
+
+  ````markdown
+  ## Suggested Next Prompt
+
+  ```text
+  <one directly reusable prompt>
+  ```
+  ````
+
+  Write the prompt as one line of plain text, with no Markdown or backticks. Put nothing else inside the fence and nothing around it. Omit the section when no meaningful next step exists.
+- **Deck QA in PowerPoint** (`../../.claude/rules/pptx-qa-uses-powerpoint.md`). Render and check the deck in Microsoft PowerPoint, never Keynote or Quick Look. Commit `28eab53` passed Keynote QA and still made PowerPoint offer a repair.
+  - Export a copy to PDF via `osascript`, unsandboxed, with up to ten minutes allowed. Then rasterize the pages.
+  - Close only the presentation reference captured at `open`. Never close by name, because that once closed the user's own deck.
+  - A repair prompt is a QA failure: fix the generator.
+  - If PowerPoint cannot run, report the visual check as blocked.
+- **Deck hand edits** (`../../.claude/rules/generated-deck-hand-edits.md`). The user edits the built deck directly, so a rebuild in place can silently discard their work. Before any rebuild:
+  1. Back up `design/atm-deck.pptx`.
+  2. Build to a scratch path.
+  3. Diff the two slide by slide: text and notes, shape geometry, and run properties, including typeface and letter spacing.
+  4. Port every difference into `design/deck/build.js`, then rebuild and diff again until only re-save noise remains. Only then replace the original.
+
+  Do the backup, check, and overwrite in one `set -euo pipefail` script with absolute paths. If an edit cannot be ported faithfully, stop and ask.
